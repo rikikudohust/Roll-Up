@@ -1,13 +1,18 @@
 {
-  "name": "hardhat-project",
-  "devDependencies": {
-    "@nomicfoundation/hardhat-toolbox": "^2.0.0",
-    "@openzeppelin/hardhat-upgrades": "^1.20.0",
-    "circomlib": "^2.0.5",
-    "circomlibjs": "^0.1.7",
-    "dotenv": "^16.0.2",
-    "hardhat": "^2.11.2",
-    "path": "^0.12.7",
-    "snarkjs": "^0.5.0"
+  "name": "myproj",
+  "version": "1.0.0",
+  "description": "this is my first proj",
+  "main": "app1.js",
+  "scripts": {
+    "test": "no test specified"
+  },
+  "author": "nhat220801",
+  "license": "ISC",
+  "dependencies": {
+    "blake-hash": "^2.0.0",
+    "blake2b": "^2.1.4",
+    "body-parser": "^1.20.0",
+    "ffjavascript": "^0.2.56",
+    "web3-utils": "^1.8.0"
   }
 }

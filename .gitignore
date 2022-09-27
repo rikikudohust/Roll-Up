@@ -1,13 +1,12 @@
+# Dependency
+node_modules/
 
 node_modules
 .env
 coverage
 coverage.json
 typechain
-typechain-types
 
-*.code-workspace 
 #Hardhat files
 cache
 artifacts
-
