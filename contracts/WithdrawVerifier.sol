@@ -2,8 +2,6 @@
 
 pragma solidity ^0.8.0;
 
-import "./Pairing.sol";
-
 contract WithdrawVerifier {
     /// @return r  bool true if proof is valid
     function verifyWithdrawProof(

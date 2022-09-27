@@ -5,27 +5,51 @@
 // will compile your contracts, add the Hardhat Runtime Environment's members to the
 // global scope, and execute the script.
 const hre = require("hardhat");
+const { poseidonContract } = require("circomlibjs");
 
 async function main() {
-  const currentTimestampInSeconds = Math.round(Date.now() / 1000);
-  const ONE_YEAR_IN_SECS = 365 * 24 * 60 * 60;
-  const unlockTime = currentTimestampInSeconds + ONE_YEAR_IN_SECS;
+    let operator;
+    [operator, ] = await ethers.getSigners();
+    // Deploying the Poseidon hashing contract
+    const P2 = new ethers.ContractFactory(
+        poseidonContract.generateABI(2),
+        poseidonContract.createCode(2),
+        operator
+    );
+    const P4 = new ethers.ContractFactory(
+        poseidonContract.generateABI(4),
+        poseidonContract.createCode(4),
+        operator
+    );
+    const P5 = new ethers.ContractFactory(
+        poseidonContract.generateABI(5),
+        poseidonContract.createCode(5),
+        operator
+    );
+    const poseidon2 = await P2.deploy();
+    const poseidon4 = await P4.deploy();
+    const poseidon5 = await P5.deploy();
 
-  const lockedAmount = hre.ethers.utils.parseEther("1");
+    var PoseidonMerkle = await ethers.getContractFactory("PoseidonMerkle");
+    const poseidonMerkle = await PoseidonMerkle.deploy(
+        poseidon2.address,
+        poseidon4.address,
+        poseidon5.address
+    );
 
-  const Lock = await hre.ethers.getContractFactory("Lock");
-  const lock = await Lock.deploy(unlockTime, { value: lockedAmount });
+    const Rollup = await hre.ethers.getContractFactory("Rollup");
+    const rollup = await Rollup.deploy(poseidonMerkle.address);
 
-  await lock.deployed();
+    await rollup.deployed();
 
-  console.log(
-    `Lock with 1 ETH and unlock timestamp ${unlockTime} deployed to ${lock.address}`
-  );
+    console.log(
+        `Deployed to ${rollup.address}`
+    );
 }
 
 // We recommend this pattern to be able to use async/await everywhere
 // and properly handle errors.
 main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
+    console.error(error);
+    process.exitCode = 1;
 });
