@@ -208,13 +208,9 @@ template ProcessTxs(n, m) {
             computedRootFromNewReceiver[i].paths2_root[j] <== paths2_root_to[i][j];
             computedRootFromNewReceiver[i].paths2_root_pos[j] <== paths2root_to_pos[i][j];
         }
-
         // check that intermediate root is consistent with input
         computedRootFromNewReceiver[i].out === intermediate_roots[2*i + 2];
     }
-
     out <== computedRootFromNewReceiver[2**m - 1].out;
-    
 }
-
 component main {public [tx_root, current_state, from_index, to_index, amount]} = ProcessTxs(4, 2);
