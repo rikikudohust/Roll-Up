@@ -3,11 +3,11 @@ pragma circom 2.0.0;
 include "../circomlib/circuits/poseidon.circom";
 include "../circomlib/circuits/eddsaposeidon.circom";
 include "../circomlib/circuits/bitify.circom";
-include "./if_gadgets.circom";
-include "./tx_existence_check.circom";
-include "./balance_existence_check.circom";
-include "./balance_leaf.circom";
-include "./get_merkle_root.circom";
+include "./helper/if_gadgets.circom";
+include "./helper/tx_existence_check.circom";
+include "./helper/balance_existence_check.circom";
+include "./helper/balance_leaf.circom";
+include "./helper/get_merkle_root.circom";
 
 template ProcessTxs(n, m) {
     // n is the depth of the balance tree 

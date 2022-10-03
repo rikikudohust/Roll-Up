@@ -1,3 +1,5 @@
+# Dependency
+node_modules/
 
 node_modules
 .env
@@ -8,9 +10,8 @@ typechain-types
 operator/tmp-leafs/
 operator/tmp-tree/
 operator/data
+Roll-Up.code-workspace
 
-*.code-workspace 
 #Hardhat files
 cache
 artifacts
-

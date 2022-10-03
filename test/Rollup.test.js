@@ -1,16 +1,16 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
-const { buildPoseidon, poseidonContract } = require("circomlibjs");
+const { buildPoseidon, poseidonContract } =  require("circomlibjs");
 const assert = require('assert');
 
-describe("Rollup contract tests", function() {
+describe("Rollup contract tests", function () {
     let operator, alice, bob;
     let poseidonMerkle;
     let rollup;
     let testToken;
     this.timeout(100000);
 
-    before(async function() {
+    before (async function () {
         [operator, alice, bob] = await ethers.getSigners();
 
         // Deploying the Poseidon hashing contract
@@ -41,7 +41,7 @@ describe("Rollup contract tests", function() {
         );
     })
 
-    it("Deploys the contracts", async() => {
+    it("Deploys the contracts", async () => {
         var Rollup = await ethers.getContractFactory("Rollup");
         rollup = await Rollup.deploy(poseidonMerkle.address);
 
@@ -49,7 +49,7 @@ describe("Rollup contract tests", function() {
         testToken = await TestToken.deploy();
     })
 
-    it("Registers a new token", async() => {
+    it("Registers a new token", async () => {
         await rollup.connect(alice).registerToken(testToken.address);
         assert.equal(
             true,
@@ -57,7 +57,7 @@ describe("Rollup contract tests", function() {
         );
     })
 
-    it("Can approve the token", async() => {
+    it("Can approve the token", async () => {
         await expect(rollup.connect(alice).approveToken(testToken.address)).to.be.reverted;
         await rollup.approveToken(testToken.address);
 
@@ -71,7 +71,7 @@ describe("Rollup contract tests", function() {
         )
     })
 
-    it("User can approve Rollup contract on TestToken", async() => {
+    it("User can approve Rollup contract on TestToken", async () => {
         await testToken.connect(alice).approve(
             rollup.address,
             1700
@@ -94,11 +94,11 @@ describe("Rollup contract tests", function() {
         '14002865450927633564331372044902774664732662568242033105218094241542484073498'
     ]
 
-    it("Makes first batch of deposits", async() => {
+    it("Makes first batch of deposits", async () => {
         await rollup.deposit(
-            [0, 0], // pubkey
-            0, // amount
-            0, // token type -- reserved to operator
+            [0,0],  // pubkey
+            0,  // amount
+            0,  // token type -- reserved to operator
         );
 
         await rollup.deposit(
@@ -116,7 +116,8 @@ describe("Rollup contract tests", function() {
         await rollup.connect(bob).deposit(
             pubkeyB,
             20,
-            1, { value: 20 }
+            1,
+            { value: 20 }
         );
 
         // await rollup.currentRoot().then(value => console.log(value.toString()));
@@ -127,8 +128,8 @@ describe("Rollup contract tests", function() {
         '14726732185301377694055836147998742577218505657530350941178791543526006846586',
         '12988208845277721051100143718644487453578123519232446209748947254348137166056'
     ]
-
-    it("Processes the first batch of deposits", async() => {
+    
+    it("Processes the first batch of deposits", async () => {
         const pendingDepositsRoot = await rollup.pendingDeposits(0);
         // console.log("first subtree root: ", pendingDepositsRoot)
         // 6960010327421291228252508201419367439952682958152537088781183226962683807181
@@ -160,7 +161,7 @@ describe("Rollup contract tests", function() {
         '2919902478295208415664305012229488283720319044050523257046455410971412405951'
     ]
 
-    it("Makes the second batch of deposits", async() => {
+    it("Makes the second batch of deposits", async () => {
 
         await rollup.connect(alice).deposit(pubkeyC, 200, 2)
 
@@ -169,7 +170,7 @@ describe("Rollup contract tests", function() {
         await rollup.connect(alice).deposit(pubkeyE, 500, 2)
 
         await rollup.connect(bob).deposit(pubkeyF, 20, 1, { value: 20 })
-
+        
     })
 
     const second4HashPosition = [1, 0]
@@ -178,7 +179,7 @@ describe("Rollup contract tests", function() {
         '12988208845277721051100143718644487453578123519232446209748947254348137166056'
     ]
 
-    it("Processes the second batch of deposits", async() => {
+    it("Processes the second batch of deposits", async () => {
         await rollup.processDeposits(
             2,
             second4HashPosition,
@@ -201,7 +202,7 @@ describe("Rollup contract tests", function() {
     ]
     const updateInput = require("./multiple_public.json");
 
-    it("Accepts a valid state transition", async() => {
+    it("Accepts a valid state transition", async () => {
         await rollup.updateState(
             updateA, updateB, updateC, updateInput
         )
@@ -219,7 +220,7 @@ describe("Rollup contract tests", function() {
     const amount = 200;
     const token_type_from = 2;
     const position = [1, 0];
-    const txRoot =
+    const txRoot = 
         "19186308455265739472869206897619575926741774529294217504266944715222135200973"
     const recipient = '0xC33Bdb8051D6d2002c0D80A1Dd23A1c9d9FC26E4';
 
@@ -241,14 +242,14 @@ describe("Rollup contract tests", function() {
         "17549222109753245772658415708953377529941918196958918546628754677657651638551"
     ]
 
-    it("Accepts valid withdrawals that get voided", async() => {
+    it("Accepts valid withdrawals that get voided", async () => {
         await rollup.connect(alice).withdraw(
             [
                 pubkey_from[0],
                 pubkey_from[1],
                 index,
-                0, // toX
-                0, // toY
+                0,  // toX
+                0,  // toY
                 nonce,
                 amount,
                 token_type_from,
@@ -256,7 +257,7 @@ describe("Rollup contract tests", function() {
             ],
             position,
             proof,
-            recipient, // recipient
+            recipient,  // recipient
             withdrawA,
             withdrawB,
             withdrawC
@@ -267,8 +268,8 @@ describe("Rollup contract tests", function() {
                 pubkey_from[0],
                 pubkey_from[1],
                 index,
-                0, // toX
-                0, // toY
+                0,  // toX
+                0,  // toY
                 nonce,
                 amount,
                 token_type_from,
@@ -276,7 +277,7 @@ describe("Rollup contract tests", function() {
             ],
             position,
             proof,
-            recipient, // recipient
+            recipient,  // recipient
             withdrawA,
             withdrawB,
             withdrawC
