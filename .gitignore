@@ -5,6 +5,9 @@ coverage
 coverage.json
 typechain
 typechain-types
+operator/tmp-leafs/
+operator/tmp-tree/
+operator/data
 
 *.code-workspace 
 #Hardhat files
