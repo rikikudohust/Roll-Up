@@ -1,32 +1,8 @@
 const { expect } = require("chai");
-const {CompileCircuit,generateProof} = require("../script/Compile_and_create_proof");
+//const {CompileCircuit,generateProof} = require("../script/Compile_and_create_proof");
 const snarkjs = require("snarkjs");
 const fs = require("fs");
 
-// async function run() {
-//     const input= require("../input/input.json");
-//     const wasmFile = "../proof/prepare_proof/multiple_tokens_transfer_and_withdraw_js/multiple_tokens_transfer_and_withdraw.wasm";
-//     const zkeyFile = "../proof/multiple_tokens_transfer_and_withdraw_final.zkey";
-//     console.log(input);
-//     const { proof, publicSignals } = await snarkjs.groth16.fullProve(input, wasmFile, zkeyFile);
-
-//     console.log("Proof: ");
-//     console.log(JSON.stringify(proof, null, 1));
-
-//     const vKey = JSON.parse(fs.readFileSync("verification_key.json"));
-
-//     const res = await snarkjs.groth16.verify(vKey, publicSignals, proof);
-
-//     if (res === true) {
-//         console.log("Verification OK");
-//     } else {
-//         console.log("Invalid proof");
-//     }
-// }
-
-// run().then(() => {
-//     process.exit(0);
-// });
 
 describe("Main", async function () {
     it("Should return true if input batch transaction is valid", async function () {
