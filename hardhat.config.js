@@ -32,7 +32,7 @@ const networks = {
         chainId: 31337,
     },
     testnetbsc: {
-        url: "https://data-seed-prebsc-2-s1.binance.org:8545/",
+        url: "https://data-seed-prebsc-1-s1.binance.org:8545/",
         chainId: 97,
         gasPrice: 20000000000,
         gasMultiplier: 2,
@@ -42,7 +42,7 @@ const networks = {
         url: "https://bsc-dataseed.binance.org/",
         chainId: 56,
         accounts: [process.env.KEY_1],
-    }
+    },
 };
 
 module.exports = {

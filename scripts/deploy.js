@@ -9,7 +9,7 @@ const { poseidonContract } = require("circomlibjs");
 
 async function main() {
     let operator;
-    [operator, ] = await ethers.getSigners();
+    [operator] = await ethers.getSigners();
     // Deploying the Poseidon hashing contract
     const P2 = new ethers.ContractFactory(
         poseidonContract.generateABI(2),
@@ -27,8 +27,14 @@ async function main() {
         operator
     );
     const poseidon2 = await P2.deploy();
+    await poseidon2.deployed();
+    console.log("poseidon 2 address", poseidon2.address);
     const poseidon4 = await P4.deploy();
+    await poseidon4.deployed();
+    console.log("poseidon 4 address", poseidon2.address);
     const poseidon5 = await P5.deploy();
+    await poseidon5.deployed();
+    console.log("poseidon 5 address", poseidon2.address);
 
     var PoseidonMerkle = await ethers.getContractFactory("PoseidonMerkle");
     const poseidonMerkle = await PoseidonMerkle.deploy(
@@ -36,15 +42,14 @@ async function main() {
         poseidon4.address,
         poseidon5.address
     );
+    await poseidonMerkle.deployed();
 
     const Rollup = await hre.ethers.getContractFactory("Rollup");
     const rollup = await Rollup.deploy(poseidonMerkle.address);
 
     await rollup.deployed();
 
-    console.log(
-        `Deployed to ${rollup.address}`
-    );
+    console.log(`Deployed to ${rollup.address}`);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
