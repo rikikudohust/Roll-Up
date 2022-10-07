@@ -13,6 +13,7 @@ operator/data
 operator/node_modules
 operator/package-lock.json
 prover/proof
+prover/input
 Roll-Up.code-workspace
 
 #Hardhat files

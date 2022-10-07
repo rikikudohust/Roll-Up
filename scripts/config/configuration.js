@@ -1,0 +1,4 @@
+contract = {
+    merkle: "0x9575dA78dD33F32DdD697Bc7D871e6b96c5A9d1F",
+    rollup: "0x20c19a85C28e7745334295Ca0aD06050994dFbE3"
+}

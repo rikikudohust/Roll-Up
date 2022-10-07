@@ -26,9 +26,16 @@ async function main() {
         poseidonContract.createCode(5),
         operator
     );
+    console.log("here");
     const poseidon2 = await P2.deploy();
+    await poseidon2.deployed();
+    console.log("Poseidon2 deploy successed", poseidon2.address);
     const poseidon4 = await P4.deploy();
+    await poseidon4.deployed();
+    console.log("Poseidon4 deploy successed", poseidon2.address);
     const poseidon5 = await P5.deploy();
+    await poseidon5.deployed();
+    console.log("Poseidon5 deploy successed", poseidon2.address);
 
     var PoseidonMerkle = await ethers.getContractFactory("PoseidonMerkle");
     const poseidonMerkle = await PoseidonMerkle.deploy(
@@ -36,6 +43,8 @@ async function main() {
         poseidon4.address,
         poseidon5.address
     );
+    await poseidonMerkle.deployed();
+    console.log("Deploy PoseidonMerkle Success at", poseidonMerkle.address);
 
     const Rollup = await hre.ethers.getContractFactory("Rollup");
     const rollup = await Rollup.deploy(poseidonMerkle.address);

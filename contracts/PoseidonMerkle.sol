@@ -41,15 +41,11 @@ contract PoseidonMerkle {
         2027205362894749361615495674412935771962908091984992515156551985438321116324
     ];
 
-<<<<<<< HEAD
     constructor(
         address _poseidon2,
         address _poseidon4,
         address _poseidon5
     ) {
-=======
-    constructor(address _poseidon2, address _poseidon4, address _poseidon5) {
->>>>>>> proof
         poseidon2 = Poseidon2(_poseidon2);
         poseidon4 = Poseidon4(_poseidon4);
         poseidon5 = Poseidon5(_poseidon5);
