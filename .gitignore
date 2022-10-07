@@ -19,3 +19,4 @@ Roll-Up.code-workspace
 #Hardhat files
 cache
 artifacts
+package-lock.json
