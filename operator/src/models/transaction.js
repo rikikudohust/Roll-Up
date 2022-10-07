@@ -1,68 +1,72 @@
-const { buildPoseidon } = require('circomlibjs');
-const { stringifyBigInts, unstringifyBigInts } = require('../utils/stringifybigint.js')
+const poseidon = require("../utils/poseidon.js");
+const eddsa = require("../utils/eddsa.js");
+const {stringifyBigInts, unstringifyBigInts} = require('../utils/stringifybigint.js')
 
-module.exports = class Transaction {
+module.exports = class Transaction  {
     constructor(
-        _poseidon,
-        _fromX, _fromY, _fromIndex,
-        _toX, _toY, _toIndex,
-        _nonce, _amount, _tokenType,
-        _R8x = null, _R8y = null, _S = null, hash = null
-    ) {
-        this.fromX = _fromX;
-        this.fromY = _fromY;
-        this.fromIndex = _fromIndex;
-        this.toX = _toX;
-        this.toY = _toY;
-        this.toIndex = _toIndex;
-        this.nonce = _nonce;
-        this.amount = _amount
-        this.tokenType = _tokenType;
+          _fromX, _fromY, _fromIndex, 
+          _toX, _toY, _toIndex,
+          _nonce, _amount, _tokenType, 
+          _R8x, _R8y, _S
+        ) {
+          this.fromX = _fromX;
+          this.fromY = _fromY;
+          this.fromIndex = _fromIndex;
+          this.toX = _toX;
+          this.toY = _toY;
+          this.toIndex = _toIndex;
+          this.nonce = _nonce;
+          this.amount = _amount
+          this.tokenType = _tokenType;
 
-        this.R8x = _R8x;
-        this.R8y = _R8y;
-        this.S = _S;
-        this.hash = hash;
-        this.poseidon = _poseidon;
+          this.hash = this.hashTx();
+      
+          this.R8x = _R8x;
+          this.R8y = _R8y;
+          this.S = _S;
     }
 
-    async hashTx() {
+    hashTx(){
         // hash unsigned transaction in subleaf mode
-        const leftSubLeaf = this.poseidon([
+        const leftSubLeaf = poseidon([
             this.fromX.toString(),
             this.fromY.toString(),
             this.toX.toString(),
             this.toY.toString(),
         ]);
-        const rightSubLeaf = this.poseidon([
+        const rightSubLeaf = poseidon([
             this.fromIndex.toString(),
             this.nonce.toString(),
             this.amount.toString(),
             this.tokenType.toString()
         ]);
-        const txHash = this.poseidon([
+        const txHash = poseidon([
             leftSubLeaf,
             rightSubLeaf,
         ]);
-        return txHash;
-        // return this.poseidon.F.e(1234);
+        this.hash = txHash;
+        return txHash
     }
 
-    async inforTx() {
-        var data = {
-            "fromX": this.fromX,
-            "fromY": this.fromY,
-            "fromIndex": this.fromIndex,
-            "toX": this.toX,
-            "toY": this.toY,
-            "toIndex": this.toIndex,
-            "nonce": this.nonce,
-            "amount": this.amount,
-            "tokenType": this.tokenType,
-            "R8x": this.R8x,
-            "R8y": this.R8y,
-            "S": this.S
-        }
-        return data;
+    signTxHash(prvkey){
+        const signature = eddsa.signPoseidon(prvkey, unstringifyBigInts(this.hash.toString()));
+        this.R8x = signature.R8[0];
+        this.R8y = signature.R8[1];
+        this.S = signature.S;
     }
+
+    checkSignature(){
+        const signature = {
+            R8: [this.R8x, this.R8y],
+            S: this.S
+        }
+        console.log(signature)
+        const signed = eddsa.verifyPoseidon(
+            this.hash, signature, [this.fromX, this.fromY]
+        )
+        if (!signed){
+            throw "transaction was not signed by sender"
+        }
+    }
+
 }

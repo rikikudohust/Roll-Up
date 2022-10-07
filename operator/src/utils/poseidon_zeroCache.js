@@ -1,6 +1,6 @@
 const poseidon = require("./poseidon.js");
 const mimcjs = require("./mimc7.js");
-const Account = require("./account.js");
+const Account = require("../models/account.js");
 
 const zeroCache = [];
 

@@ -1,14 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const { getInformationFromAddress, getInformationFromIndex } = require('../services/userService.js');
-const { createTransaction } = require('../services/transactionService.js');
 const TxModel = require('../db/tx.js');
 const AccModel = require('../db/account.js');
 const DepositModel = require('../db/deposit.js');
+const TreeModel = require('../db/tree.js')
 const Account = require('../models/account.js');
 const Transaction = require('../models/transaction.js');
-const { buildEddsa, buildPoseidon } = require('circomlibjs');
-const poseidon = require('../utils/poseidon.js');
+const prv2pub = require('../utils/eddsa.js').prv2pub
+const Tree = require('../models/tree.js');
 
 
 router.get('/user/index/:id', async function (req, res, next) {
@@ -37,30 +37,33 @@ router.get('/user/address/:address', async function (req, res, next) {
 
 router.post("/deposit", async (req, res, next) => {
     try {
-        var data = {
-            "fromX": req.body.fromX,
-            "fromY": req.body.fromY,
-            "index": req.body.index,
-            "amount": req.body.amount
-
+        var fromX = BigInt(req.body.fromX);
+        var fromY = BigInt(req.body.fromY);
+        var datax = await AccModel.find({ pubkeyX: fromX, pubkeyY: fromY }).exec();
+        if (datax.length != 0) {
+            res.status(403).json({ message: "!exist" });
+        } else {
+            var data = {
+                "fromX": fromX,
+                "fromY": fromY,
+                "tokenType": req.body.tokenType,
+                "amount": req.body.amount,
+            }
+            var depositData = new DepositModel(data);
+            depositData.save();
+            res.json({ "message": "success" });
         }
 
-        var depositData = new DepositModel(data);
-        depositData.save();
-        res.json(data)
     } catch (err) {
-        console.error("Error POST /transactions");
+        console.error("Error POST /deposit", err);
         next(err)
     }
 })
 
 router.post("/transaction", async (req, res) => {
     var prvkey = Buffer.from(req.body.prvkey, "hex");
-    var eddsa = await buildEddsa();
-    var poseidon = await buildPoseidon();
-    var account = new Account(prvkey, eddsa, poseidon);
-    var fromX = account.poseidon.F.toObject(account.pubkey[0]).toString();
-    var fromY = account.poseidon.F.toObject(account.pubkey[1]).toString();
+    var fromX = req.body.fromX;
+    var fromY = req.body.fromY;
     var fromIndex = req.body.fromIndex;
     var toX = req.body.toX;
     var toY = req.body.toY;
@@ -70,45 +73,72 @@ router.post("/transaction", async (req, res) => {
     var tokenType = req.body.tokenType;
     try {
         var dataX = await AccModel.find({ fromX: fromX, fromY: fromY }).exec();
-        if (dataX == null) {
+        if (dataX.length == []) {
             res.status(403).json({ message: "Not Found" });
         } else {
-            var newTx = new Transaction(poseidon, fromX, fromY, fromIndex, toX, toY, toIndex, nonce, balance, tokenType)
-            var data = await account.signTx(newTx);
-            const txData = new TxModel(data);
+            var newTx = new Transaction(fromX, fromY, fromIndex, toX, toY, toIndex, nonce, balance, tokenType)
+            newTx.hashTx();
+            newTx.signTxHash(prvkey);
+            const txData = new TxModel(newTx);
             txData.save();
-            res.json(data);
+            res.json({ message: "success" });
         }
     } catch (err) {
-        console.error("Error", err.message);
+        console.error("Error", err);
     }
 
 })
 
-router.post("/wallet", async (req, res) => {
+router.post("/generateState", async (req, res) => {
     try {
-        var prvkey = Buffer.from(req.body.prvkey, "hex");
-        var eddsa = await buildEddsa();
-        var poseidon = await buildPoseidon();
-        var account = new Account(prvkey, eddsa, poseidon);
-        var fromX = account.poseidon.F.toObject(account.pubkey[0]).toString();
-        var fromY = account.poseidon.F.toObject(account.pubkey[1]).toString();
-        var dataX = await AccModel.find({ fromX: fromX, fromY: fromY }).exec();
-        if (dataX.length != 0) {
-            res.status(403).json({ message: "!Exist" });
-        } else {
-            var lastIndex = await AccModel.countDocuments({ name: 'accounts' }).exec();
-            const data = {
-                "index": lastIndex,
-                "fromX": account.F.toObject(account.pubkey[0]).toString(),
-                "fromY": account.F.toObject(account.pubkey[1]).toString(),
-            }
-            var accData = new AccModel(data);
-            accData.save();
-            res.json(data);
+        var stateData = await AccModel.find({ index: 0 }).exec();
+        if (stateData.length != 0) {
+            throw '!Exist';
         }
+        var zeroAccount = new Account(0, 0, 0, 0, 0, 0, 0, 0);
+        var stateAccount = [zeroAccount];
+        const BAL_DEPTH = 4;
+        const zeroHash = zeroAccount.hashAccount()
+        const numLeaves = 2 ** BAL_DEPTH;
+        const zeroLeaves = new Array(numLeaves).fill(zeroHash)
+        const zeroTree = new Tree(zeroLeaves);
+        await AccModel(zeroAccount).save();
+        await TreeModel({root: zeroTree.root, account: 1}).save();
+        return res.json({ "message": "init state success" });
     } catch (err) {
-        console.error("Error", err.message);
+        console.error("Error: ", err);
     }
 })
+
+// router.post("/wallet", async (req, res) => {
+//     try {
+//         var prvkey = Buffer.from(req.body.prvkey, "hex");
+//         var account = new Account(prvkey);
+//         console.log(account)
+//         var fromX = account.pubkeyX;
+//         var fromY = account.pubkeyY;
+//         var datax = await accmodel.find({ pubkeyx: fromx, pubkeyy: fromy }).exec();
+//         console.log(datax);
+//         if (datax.length != 0) {
+//             res.status(403).json({ message: "!exist" });
+//         } else {
+//             var lastindex = await accmodel.countdocuments({ name: 'accounts' }).exec();
+//             const data = {
+//                 "index": lastindex,
+//                 "pubkeyx": account.pubkeyx.tostring(),
+//                 "pubkeyy": account.pubkeyy.tostring(),
+//                 "prvkey": req.body.prvkey,
+//                 "balance": 0,
+//                 "nonce": 0,
+//                 "tokentype": 0,
+//                 "hash": ""
+//             }
+//             var accdata = new accmodel(data);
+//             accdata.save();
+//             res.json(data);
+//         }
+//     } catch (err) {
+//         console.error("Error", err);
+//     }
+// })
 module.exports = router;

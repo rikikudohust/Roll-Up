@@ -4,14 +4,26 @@ const accountSchema = new mongoose.Schema({
         require: true,
         type: Number
     },
-    fromX: {
+    pubkeyX: {
         require: true,
         type: String
     },
-    fromY: {
+    pubkeyY: {
         require: true,
         type: String
     },
+    balance: {
+        require: true,
+        type: Number,
+    },
+    nonce: {
+        require: true,
+        type: Number
+    },
+    tokenType: {
+        require: true,
+        type: Number
+    }
 })
 
 module.exports = mongoose.model('Account', accountSchema);

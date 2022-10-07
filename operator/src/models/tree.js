@@ -1,4 +1,4 @@
-const treeHelper = require("./treeHelper.js");
+const treeHelper = require("../utils/treeHelper.js");
 
 module.exports = class Tree{
 

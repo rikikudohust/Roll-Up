@@ -16,9 +16,9 @@ const depositSchema = new mongoose.Schema({
         require: true,
         type: Number
     },
-    depositRoot: {
-        require: false,
-        type: String
+    tokenType: {
+        require: true,
+        type: Number
     }
 })
 

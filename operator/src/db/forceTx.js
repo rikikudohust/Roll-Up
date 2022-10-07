@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const transactionSchema = new mongoose.Schema({
+const blockSchema = new mongoose.Schema({
     fromX: {
         require: true,
         type: String
@@ -52,7 +52,11 @@ const transactionSchema = new mongoose.Schema({
     S: {
         require: false,
         type: String
-    },
+    }
+    // block: {
+    //     require: false,
+    //     type: String
+    // }
 })
 
-module.exports = mongoose.model('Txpool', transactionSchema);
+module.exports = mongoose.model('Block', blockSchema);

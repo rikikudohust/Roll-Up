@@ -1,4 +1,4 @@
-const poseidon = require("../utils/poseidon.js");
+const poseidon = require("./poseidon.js");
 
 module.exports = {
 

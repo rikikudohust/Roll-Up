@@ -1,39 +1,48 @@
-const {buildEddsa, buildBabyjub, buildPoseidon} = require('circomlibjs');
-const { model } = require('mongoose');
-const { unstringifyBigInts } = require('../utils/stringifybigint');
+const poseidon = require('../utils/poseidon.js');
 
 module.exports = class Account {
     constructor(
-        _prvkey,
-        eddsa,
-        poseidon
+        _index = 0, _pubkeyX = 0, _pubkeyY = 0, 
+        _balance = 0, _nonce = 0, _tokenType  = 0,
+        _prvkey = 0
     ) {
+        this.index = _index;
+        this.pubkeyX = _pubkeyX;
+        this.pubkeyY = _pubkeyY;
+        this.balance = _balance;
+        this.nonce = _nonce;
+        this.tokenType = _tokenType;
+
         this.prvkey = _prvkey;
-        this.eddsa = eddsa,
-        this.pubkey = this.eddsa.prv2pub(this.prvkey);
-        this.poseidon = poseidon;
-        this.F = poseidon.F;
+        this.hash = this.hashAccount()
+    }
+    
+    hashAccount(){
+        const accountHash = poseidon([
+            // this.index.toString(),
+            this.pubkeyX.toString(),
+            this.pubkeyY.toString(),
+            this.balance.toString(),
+            this.nonce.toString(),
+            this.tokenType.toString(),
+        ])
+        return accountHash
     }
 
-    async signTx(tx) {
-        const txHash = await tx.hashTx();
-        const signature = this.eddsa.signPoseidon(this.prvkey,txHash);
-        tx.R8x = this.F.toObject(signature.R8[0]).toString();
-        tx.R8y = this.F.toObject(signature.R8[1]).toString();
-        tx.S = signature.S.toString();
-        var data = await tx.inforTx();
-        return data;
-    } 
+    debitAndIncreaseNonce(amount){
+        this.balance = this.balance - amount; 
+        this.nonce++;
+        this.hash = this.hashAccount()
+    }
+
+    credit(amount){
+        if (this.index > 0){ // do not credit zero leaf
+            this.balance = this.balance + amount;
+            this.hash = this.hashAccount()
+        }
+    }
+
 }
 
-// async function buildAccount(prvkey) {
-//     var eddsa  = await buildEddsa();
-//     var poseidon = await buildPoseidon();
-//     var account = new Account(prvkey, eddsa, poseidon);
-//     return account;
-// }
 
-// module.exports = {
-//     buildAccount,
-//     Account
-// }
+    
