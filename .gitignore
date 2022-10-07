@@ -10,6 +10,9 @@ typechain-types
 operator/tmp-leafs/
 operator/tmp-tree/
 operator/data
+operator/node_modules
+operator/package-lock.json
+prover/proof
 Roll-Up.code-workspace
 
 #Hardhat files
