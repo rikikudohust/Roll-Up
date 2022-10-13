@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { getInformationFromAddress, getInformationFromIndex } = require('../services/userService.js');
+const { getInformationFromIndex } = require('../services/monitoring/userService.js');
+const { getAllTransaction, getTransactionByIndex } = require('../services/monitoring/transactionService.js');
+const { getCurrentTree } = require('../services/monitoring/treeService.js')
 const TxModel = require('../db/tx.js');
 const AccModel = require('../db/account.js');
 const DepositModel = require('../db/deposit.js');
@@ -10,17 +12,39 @@ const Transaction = require('../models/transaction.js');
 const prv2pub = require('../utils/eddsa.js').prv2pub
 const Tree = require('../models/tree.js');
 
+router.get('/tree', async function (req, res, next) {
+    try {
+        console.log(await getCurrentTree())
+        res.status(200).json({"tree": JSON.stringify(await getCurrentTree(), (key, value) =>
+            typeof value == 'bigint'
+                ? value.toString()
+                : value
+                )
+    });
+    } catch (err) {
+        console.error("Error", err);
+    }
+});
+
+router.get('/transactions/', async function (req, res, next) {
+    try {
+        res.status(200).json(await getAllTransaction());
+    } catch (err) {
+        console.error("Err", err);
+    }
+});
+
+router.get('/transactions/user/:id', async function (req, res, next) {
+    try {
+        res.status(200).json(await getTransactionByIndex(req.params.id))
+    } catch (err) {
+        console.error("Err", err);
+    }
+});
 
 router.get('/user/index/:id', async function (req, res, next) {
     try {
-        var id = req.params.id;
-        console.log(id)
-        var account = await AccModel.find({ index: id }).exec();
-        res.status(200).json({
-            index: account[0].index,
-            fromX: account[0].fromX,
-            fromY: account[0].fromY
-        });
+        res.status(200).json(await getInformationFromIndex(req.params.id));
     } catch (err) {
         console.error("Err user/index/:id", err.message);
         next(err);
@@ -79,6 +103,7 @@ router.post("/transaction", async (req, res) => {
             var newTx = new Transaction(fromX, fromY, fromIndex, toX, toY, toIndex, nonce, balance, tokenType)
             newTx.hashTx();
             newTx.signTxHash(prvkey);
+            newTx.checkSignature();
             const txData = new TxModel(newTx);
             txData.save();
             res.json({ message: "success" });
@@ -103,7 +128,7 @@ router.post("/generateState", async (req, res) => {
         const zeroLeaves = new Array(numLeaves).fill(zeroHash)
         const zeroTree = new Tree(zeroLeaves);
         await AccModel(zeroAccount).save();
-        await TreeModel({root: zeroTree.root, account: 1}).save();
+        await TreeModel({ root: zeroTree.root, account: 1 }).save();
         return res.json({ "message": "init state success" });
     } catch (err) {
         console.error("Error: ", err);

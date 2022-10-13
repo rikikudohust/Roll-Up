@@ -61,8 +61,11 @@ module.exports = class Transaction  {
             S: this.S
         }
         console.log(signature)
+        console.log(this.hash)
+        console.log(this.fromX)
+        console.log(this.fromY)
         const signed = eddsa.verifyPoseidon(
-            this.hash, signature, [this.fromX, this.fromY]
+            this.hash, signature, [BigInt(this.fromX), BigInt(this.fromY)]
         )
         if (!signed){
             throw "transaction was not signed by sender"
