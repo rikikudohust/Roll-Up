@@ -38,7 +38,7 @@ for (var i = BAL_DEPTH - 1; i >= 0; i--) {
 }
 
 function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise(resolve => setTimeout(resolve, ms)); 
 }
 
 async function main() {
@@ -50,10 +50,12 @@ async function main() {
         console.log("Process Deposit")
         await processDeposit(rollup, signer);
         console.log("Process Deposit Successfully")
+        
         console.log("Process Transaction")
         await processTx(rollup, signer);
         console.log("Process Transaction Successfully")
-        await sleep(10000);
+
+        await sleep(20000);
     }
 }
 

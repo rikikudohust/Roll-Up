@@ -196,7 +196,7 @@ contract Rollup is UpdateVerifier, WithdrawVerifier {
         txLeftSubleaf[3] = txInfo[4];
         uint256[] memory txRightSubleaf = new uint256[](4);
         txRightSubleaf[0] = txInfo[2];
-        txRightSubleaf[1] = txInfo[4];
+        txRightSubleaf[1] = txInfo[5];
         txRightSubleaf[2] = txInfo[6];
         txRightSubleaf[3] = txInfo[7];
 
@@ -281,6 +281,10 @@ contract Rollup is UpdateVerifier, WithdrawVerifier {
         numTokens++;
         registeredTokens[numTokens] = tokenContractAddress;
         emit RegisteredToken(numTokens, tokenContractAddress);
+    }
+
+    function setcurrentRoot(uint256 Root) public onlyCoordinator{
+        currentRoot = Root;
     }
 
     // helper functions

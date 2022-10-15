@@ -58,5 +58,4 @@ template TxExistence(k) {
     verifier.R8y <== R8y;
     verifier.S <== S;
     verifier.M <== txLeaf.out;
-
 }

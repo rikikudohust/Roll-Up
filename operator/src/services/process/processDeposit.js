@@ -69,7 +69,12 @@ module.exports = async function processDeposit(rollup,signer) {
         for (let i = 0; i < subTreeProof.length; ++i) {
             proof.push(subTreeProof[i].toString());
         }
+        console.log(data.subTreeDepth);
+        console.log(data.subTreeProofPos);
+        console.log(proof);
         var processDepositTx = await rollup.connect(signer).processDeposits(data.subTreeDepth, data.subTreeProofPos, proof);
+        //const address1 = "0x5C057669CC676ba1747510974699DC8c8693E08F"
+       // var processDepositTx = await rollup.methods.processDeposits(data.subTreeDepth, data.subTreeProofPos, proof).send({from:address1,gas:999999});
         await processDepositTx.wait();
         await AccountModel.insertMany(depositAccount);
         await DepositModel.deleteMany({id: depositId});

@@ -1,7 +1,6 @@
 const poseidon = require("../utils/poseidon.js");
 const eddsa = require("../utils/eddsa.js");
 const {stringifyBigInts, unstringifyBigInts} = require('../utils/stringifybigint.js')
-
 module.exports = class Transaction  {
     constructor(
           _fromX, _fromY, _fromIndex, 
@@ -62,11 +61,10 @@ module.exports = class Transaction  {
         }
         console.log(signature)
         const signed = eddsa.verifyPoseidon(
-            this.hash, signature, [this.fromX, this.fromY]
+            this.hash, signature, [BigInt(this.fromX), BigInt(this.fromY)]
         )
         if (!signed){
             throw "transaction was not signed by sender"
         }
     }
-
 }

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.8.10;
+pragma solidity ^0.8.0;
 
 library Pairing {
     struct G1Point {
@@ -11,6 +11,11 @@ library Pairing {
     struct G2Point {
         uint[2] X;
         uint[2] Y;
+    }
+    struct Proof {
+        Pairing.G1Point A;
+        Pairing.G2Point B;
+        Pairing.G1Point C;
     }
     /// @return the generator of G1
     function P1() internal pure returns (G1Point memory) {

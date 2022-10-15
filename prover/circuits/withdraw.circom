@@ -3,15 +3,13 @@ pragma circom 2.0.0;
 include "../circomlib/circuits/eddsaposeidon.circom";
 include "../circomlib/circuits/mimc.circom";
 
-template Main(){
-
+template Withdraw(){
     signal input Ax;
     signal input Ay;
     signal input R8x;
     signal input R8y;
     signal input S;
     signal input M;
-
     component verifier = EdDSAPoseidonVerifier();   
     verifier.enabled <== 1;
     verifier.Ax <== Ax;
@@ -20,7 +18,6 @@ template Main(){
     verifier.R8y <== R8y;
     verifier.S <== S;
     verifier.M <== M;
-
 }
 
-component main {public [Ax, Ay, M]} = Main();
+component main {public [Ax, Ay, M]} = Withdraw();

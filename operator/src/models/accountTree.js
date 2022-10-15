@@ -1,6 +1,8 @@
 const Tree = require("./tree.js");
 const Transaction = require("./transaction.js")
-
+const WithdrawModel = require('../db/withdraw.js');
+const WithdrawProofModel = require('../db/withdrawproof.js');
+const {stringifyBigInts} = require('../utils/stringifybigint.js')
 module.exports = class AccountTree extends Tree{
     constructor(
         _accounts
@@ -31,7 +33,20 @@ module.exports = class AccountTree extends Tree{
             // process transaction
             console.log('processing tx', i)
             deltas[i] = this.processTx(tx);
-
+            
+            // add to database with withdraw txn
+            console.log("thong tin txn:", tx);
+            console.log("path:", txProofPos)
+            console.log("proof:", stringifyBigInts(txProof) )
+            const newWithdrawProof = new WithdrawProofModel
+            ({
+                hashWithdraw: tx.hash.toString(),
+                txRoot: txTree.root,
+                position:txProofPos, 
+                proof: stringifyBigInts(txProof)
+                
+            });
+            newWithdrawProof.save()
         }
 
         return {

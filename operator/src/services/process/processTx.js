@@ -11,9 +11,9 @@ const getCircuitInput = require('../../utils/circuitInput_validity.js')
 const snarkjs = require('snarkjs');
 const fs = require('fs');
 
-const wasmFile = "/home/arsene_lupin/WorkSpace/BlockChain/Roll-Up/prover/proof/prepare_proof/multiple_tokens_transfer_and_withdraw_js/multiple_tokens_transfer_and_withdraw.wasm";
-const zkeyFile = "/home/arsene_lupin/WorkSpace/BlockChain/Roll-Up/prover/proof/multiple_tokens_transfer_and_withdraw_final.zkey";
-const vkeyFile = require("../../../../prover/proof/verification_key.json");
+const wasmFile = "../prover/proof/prepare_proof/multiple_tokens_transfer_and_withdraw_js/multiple_tokens_transfer_and_withdraw.wasm";
+const zkeyFile = "../prover/proof/multiple_tokens_transfer_and_withdraw_final.zkey";
+const vkeyFile = require("../../../../prover/proof/multiple_key.json");
 
 const TX_DEPTH = 2;
 
@@ -51,7 +51,9 @@ module.exports = async function processTx(rollup, signer) {
     var currentTree = await loadTree();
 
     console.log(currentTree)
+    
     txs = new Array(TX_DEPTH ** 2)
+    
     for (var i = 0; i < txs.length; ++i) {
         if (i < transactionData.length) {
             // console.log(transactionData[i]
@@ -59,6 +61,7 @@ module.exports = async function processTx(rollup, signer) {
             txs[i] = tx;
         }
     }
+
     const txTree = new TxTree(txs);
     const stateTransition = currentTree.processTxArray(txTree);
     const inputs = getCircuitInput(stateTransition);
