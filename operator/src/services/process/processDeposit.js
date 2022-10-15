@@ -1,15 +1,13 @@
 const TreeModel = require('../../db/tree.js');
 const DepositModel = require('../../db/deposit.js');
+const AccountModel = require('../../db/account.js');
 const { stringifyBigInts, unstringifyBigInts } = require('../../utils/stringifybigint.js');
-const AccountTree = require('../../models/accountTree');
 const Account = require('../../models/account.js')
 const Tree = require('../../models/tree.js')
-const AccountModel = require('../../db/account.js');
-const loadTree = require('../loadTree.js');
 
 const TX_DEPTH = 2;
 const BAL_DEPTH = 4;
-const zeroAccount = new Account('0');
+const zeroAccount = new Account();
 const zeroHash = zeroAccount.hashAccount()
 const numLeaves = 2 ** BAL_DEPTH;
 const zeroLeaves = new Array(numLeaves).fill(zeroHash)
@@ -19,62 +17,83 @@ for (var i = BAL_DEPTH - 1; i >= 0; i--) {
     zeroCache.unshift(stringifyBigInts(zeroTree.innerNodes[i][0]))
 }
 
-module.exports = async function processDeposit(rollup,signer) {
+function calculateOptimalDeposit(accountSize, pendingDepositSize) {
+    var limit = 0;
+    if (accountSize % 2 != 0) {
+        limit = 1;
+    } else if (accountSize % 4 == 0) {
+        limit = 4;
+    } else {
+        limit = 2;
+    }
+
+    dataProcess = (limit < pendingDepositSize ? limit : pendingDepositSize);
+    return  dataProcess;
+}
+
+module.exports = async function processDeposit(rollup, signer) {
     try {
-
-        var depositData = await DepositModel.find().exec();
-        if (depositData.length == 0) {
+        var currentAccount = await AccountModel.find().exec();
+        var accountSize = currentAccount.length;
+        var depositPendingSize = await DepositModel.count().exec();
+        var limitProcess = calculateOptimalDeposit(accountSize, depositPendingSize);
+        if (depositPendingSize == 0) {
             return;
         }
+        var depositPendingData = await DepositModel.find().limit(limitProcess).exec();
 
-        if(depositData.length % 2 != 0) {
-            return;
+        var currentTree = await TreeModel.find().sort({ _id: -1 }).limit(1);
+        var accountLeaves = new Array(2 ** BAL_DEPTH).fill(zeroAccount);
+        var depositLeaves = [];
+        for (let i = 0; i < accountSize; ++i) {
+            var tmpAccount = new Account(
+                currentAccount[i].index,
+                currentAccount[i].pubkeyX,
+                currentAccount[i].pubkeyY,
+                currentAccount[i].balance,
+                currentAccount[i].nonce,
+                currentAccount[i].tokenType,
+                currentAccount[i].l1Address
+            )
+            accountLeaves[i] = tmpAccount;
         }
 
-        var batch = await TreeModel.find().exec();
-        var currentRoot = batch.slice(-1);
-
-        var oldAccount  = await AccountModel.find().exec();
-        var treeLeaf = new Array(BAL_DEPTH**2).fill(zeroHash);
-        var depositId = [];
-        var depositAccount = [];
-        for (let i = 0; i < depositData.length; ++i) {
-            var tmpAcc = new Account(currentRoot[0].account + i,BigInt(depositData[i].fromX),BigInt(depositData[i].fromY), depositData[i].amount, 0, depositData[i].tokenType);
-            depositAccount.push(tmpAcc);
-            depositId.push(depositData[i].id);
-
+        var depoistId = []
+        for (let i = 0; i < limitProcess; ++i) {
+            var tmpAccount = new Account(
+                accountSize + i,
+                depositPendingData[i].fromX,
+                depositPendingData[i].fromY,
+                depositPendingData[i].amount,
+                0,
+                depositPendingData[i].tokenType,
+                depositPendingData[i].l1Address
+            )
+            accountLeaves[accountSize + i] = tmpAccount;
+            depositLeaves.push(tmpAccount);
+            depoistId.push(depositPendingData[i]._id);
         }
-        for (let i = 0; i < currentRoot[0].account; ++i) {
-            treeLeaf[i] = (new Account(oldAccount[i].index, oldAccount[i].pubkeyX, oldAccount[i].pubkeyY, oldAccount[i].balance, oldAccount[i].nonce, oldAccount[i].tokenType)).hashAccount();
-        }
+        var newTree = new Tree(accountLeaves.map(v => v.hash));
+        // var newDepositTree = new Tree(depositLeaves);
 
-        for (let i = 0;i < depositData.length; ++i) {
-            treeLeaf[currentRoot[0].account + i] = (new Account(currentRoot[0].account + i,BigInt(depositData[i].fromX),BigInt(depositData[i].fromY), depositData[i].amount, 0, depositData[i].tokenType)).hashAccount();
-        }
-        var tree = new Tree(treeLeaf);
-
-        if (depositData.length > 2) {
-            return;
-        }
-
-        var proofData = (tree.getProof(currentRoot[0].account + 1, BAL_DEPTH));
-        const subTreeProof = proofData.proof.slice(Math.log2(depositAccount.length), BAL_DEPTH);
-        const subTreeProofPos = proofData.proofPos.slice(Math.log2(depositAccount.length), BAL_DEPTH);
-        data = {
-            subTreeDepth: Math.log2(depositAccount.length),
+        var proofData = (newTree.getProof( 4, BAL_DEPTH));
+        const subTreeProof = proofData.proof.slice(Math.log2(limitProcess), BAL_DEPTH);
+        const subTreeProofPos = proofData.proofPos.slice(Math.log2(limitProcess), BAL_DEPTH);
+        var proofDepositData = {
+            subTreeDepth: Math.log2(limitProcess),
             subTreeProofPos: subTreeProofPos,
-            subTreeProof: subTreeProof
+            subTreeProof: subTreeProof.map(v => v.toString())
         }
-        var proof = [];
-        for (let i = 0; i < subTreeProof.length; ++i) {
-            proof.push(subTreeProof[i].toString());
-        }
-        var processDepositTx = await rollup.connect(signer).processDeposits(data.subTreeDepth, data.subTreeProofPos, proof);
+        var processDepositTx = await rollup.connect(signer).processDeposits(proofDepositData.subTreeDepth, proofDepositData.subTreeProofPos, proofDepositData.subTreeProof);
         await processDepositTx.wait();
-        await AccountModel.insertMany(depositAccount);
-        await DepositModel.deleteMany({id: depositId});
-        await TreeModel({root: tree.root, account: currentRoot[0].account + depositData.length}).save();
-    } catch(err) {
+
+        const A = await AccountModel.insertMany(depositLeaves);
+        const B = await DepositModel.deleteMany({_id:depoistId});
+        const C = await TreeModel({index: currentTree[0].index, root: newTree.root, leafNodes: newTree.leafNodes, depth: newTree.depth, innerNodes: newTree.innerNodes}).save();
+
+        console.log("Update Process Deposit Success");
+        return;
+    } catch (err) {
         console.log("Error", err);
     }
 }
