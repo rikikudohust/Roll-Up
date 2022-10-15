@@ -5,6 +5,8 @@ import { store } from "./redux/store";
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 import Deposit from "./components/deposit";
 import TransferOffChain from "./components/transferOffChain";
+import Withdraw from "./components/withdraw";
+import WithdrawHistory from "./components/withdrawHistory";
 
 export default function App() {
   return (
@@ -19,7 +21,11 @@ export default function App() {
             <Route exact path="/transfer">
               <TransferOffChain />
             </Route>
+            <Route exact path="/withdraw">
+              <Withdraw />
+            </Route>
           </Switch>
+          <WithdrawHistory />
         </SnackbarProvider>
       </Router>
     </Provider>

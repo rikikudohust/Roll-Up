@@ -13,6 +13,9 @@ export default function Headers() {
       <div>
         <RouterLink to="/transfer">Transfer</RouterLink>
       </div>
+      <div>
+        <RouterLink to="/withdraw">Withdraw</RouterLink>
+      </div>
     </div>
   );
 }

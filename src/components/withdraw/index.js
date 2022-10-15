@@ -6,7 +6,7 @@ import BigNumber from "bignumber.js";
 import { useSelector } from "react-redux";
 import axios from "axios"
 
-export default function TransferOffChain() {
+export default function Withdraw() {
   const [amount,setAmount]=useState(null);
   const [toAddress,setToAddress]=useState(null);
   const [tokenType, setTokenType] = useState(null);
@@ -18,12 +18,12 @@ export default function TransferOffChain() {
     "0xBe750d4701cA96976042ce51486Ebe0197604549"
   );
 
-  async function _transfer() {
-    var accountData = await axios.get("accountData",{ "toAddress": toAddress,"amount": amount, "tokenType": tokenType})
-    var signedData=await web3Reader.eth.sign(await web3Reader.utils.sha3(accountData),address)
-    await axios.post("/rollup/transaction/",signedData).then(res => {
-      console.log(res.data)
-    })
+  async function _withdraw() {
+    // var accountData = await axios.get("accountData",{ "toAddress": toAddress,"amount": amount, "tokenType": tokenType})
+    // var signedData=await web3Reader.eth.sign(await web3Reader.utils.sha3(accountData),address)
+    // await axios.post("/rollup/transaction/",signedData).then(res => {
+    //   console.log(res.data)
+    // })
   }
 
   function handleAmountChange(ev) {
@@ -41,7 +41,7 @@ export default function TransferOffChain() {
       <div style={{ margin: '20px' }} >{"To Address: "}<TextField style={{ width: '500px' }} onChange={handleToAddressChange}/></div>
       <div style={{ margin: '20px' }}> {"Token type: "}<TextField onChange={handleTokenTypeChange} /></div>
       <div style={{ margin: '20px' }}> {"Amount: "}<TextField onChange={handleAmountChange} /></div>
-      <Button style={{ backgroundColor:'pink', marginLeft:'150px'}} onClick={_transfer}> Transfer </Button>{" "}
+      <Button style={{ backgroundColor:'pink', marginLeft:'150px'}} onClick={_withdraw}> Withdraw </Button>{" "}
     </div>
   );
 }

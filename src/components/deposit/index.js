@@ -1,13 +1,12 @@
 import { Button, TextField } from "@material-ui/core";
-import { useEffect, useState } from "react";
+import {useState } from "react";
 import Web3 from "web3";
 import BEP20_ABI from "../web3/BEP20_ABI.json";
 import BigNumber from "bignumber.js";
 import { useSelector } from "react-redux";
-import { TwoWheelerOutlined } from "@material-ui/icons";
+import axios from "axios"
 
 export default function Deposit() {
-  const [deposit, setDeposit] = useState(null);
   const [amount, setAmount] = useState(null);
   const [pk1, setPk1] = useState(null);
   const [pk2, setPk2] = useState(null);
@@ -21,13 +20,15 @@ export default function Deposit() {
   );
 
   async function _deposit() {
-    // await contract.methods
-    //   .deposit([pk1,pk2], amount, tokenType)
-    //   .send({ from: address,gas: 9999999,value: amount });
+    await contract.methods
+      .deposit([pk1,pk2], amount, tokenType)
+      .send({ from: address,gas: 9999999,value: amount });
 
-    var addr=await web3Reader.eth.getCoinbase()
-    //var nonce=await fetch(`/api/users?publicAddress=${addr}`)
-    var sign=await web3Reader.eth.sign(await web3Reader.utils.sha3("nonce"), addr).then(console.log)
+    var currentAddr=await web3Reader.eth.getCoinbase()
+    var info={ "fromX": pk1,"fromY": pk2,"l1Address": currentAddr,"amount": amount,"tokenType": tokenType }
+    await axios.post("/rollup/deposit/",info).then(res => {
+      console.log(res.data)
+    })
   }
 
   function handleAmountChange(ev) {
@@ -46,7 +47,6 @@ export default function Deposit() {
 
   return (
     <div style={{ margin: "20px" }}>
-      <div> {deposit} </div>
       <div style={{ margin: "20px" }}>
         {"Pubkey 1: "}
         <TextField style={{ width: "500px" }} onChange={handlePK1Change} />
