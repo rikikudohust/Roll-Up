@@ -23,6 +23,18 @@ const accountSchema = new mongoose.Schema({
     tokenType: {
         require: true,
         type: Number
+    },
+    hash: {
+        require: true,
+        type: String
+    },
+    l1Address: {
+        require: true,
+        type: String
+    },
+    path: {
+        require: true,
+        type: [Number]
     }
 })
 

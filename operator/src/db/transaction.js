@@ -53,6 +53,10 @@ const transactionSchema = new mongoose.Schema({
         require: false,
         type: String
     },
+    // BlockId: {
+    //     require: false,
+    //     type: Number
+    // },
 })
 
-module.exports = mongoose.model('Txpool', transactionSchema);
+module.exports = mongoose.model('Mempool', transactionSchema);

@@ -46,6 +46,7 @@ module.exports = class AccountTree extends Tree{
 
     processTx(tx){
         const sender = this.findAccountByPubkey(tx.fromX, tx.fromY);
+        console.log(sender.index)
         const indexFrom = sender.index;
         const balanceFrom = sender.balance;
 

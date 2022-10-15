@@ -60,10 +60,6 @@ module.exports = class Transaction  {
             R8: [this.R8x, this.R8y],
             S: this.S
         }
-        console.log(signature)
-        console.log(this.hash)
-        console.log(this.fromX)
-        console.log(this.fromY)
         const signed = eddsa.verifyPoseidon(
             this.hash, signature, [BigInt(this.fromX), BigInt(this.fromY)]
         )

@@ -14,6 +14,7 @@ operator/node_modules
 operator/package-lock.json
 prover/proof
 prover/input
+operator/tmp
 Roll-Up.code-workspace
 
 #Hardhat files

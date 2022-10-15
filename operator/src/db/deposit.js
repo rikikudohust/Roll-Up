@@ -4,6 +4,10 @@ const depositSchema = new mongoose.Schema({
         require: true,
         type: Number
     },
+    l1Address: {
+        require: true,
+        type: String
+    },
     fromX: {
         require: true,
         type: String

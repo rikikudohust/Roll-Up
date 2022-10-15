@@ -52,11 +52,11 @@ const blockSchema = new mongoose.Schema({
     S: {
         require: false,
         type: String
+    },
+    block: {
+        require: false,
+        type: Number
     }
-    // block: {
-    //     require: false,
-    //     type: String
-    // }
 })
 
 module.exports = mongoose.model('Block', blockSchema);

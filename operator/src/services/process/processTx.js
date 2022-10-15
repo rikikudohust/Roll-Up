@@ -1,21 +1,24 @@
 const TreeModel = require('../../db/tree.js');
-const DepositModel = require('../../db/deposit.js');
-const TxTree = require('../../models/txTree.js');
 const AccountModel = require('../../db/account.js')
-const Transaction = require('../../models/transaction.js');
 const BlockModel = require('../../db/forceTx.js');
+const TransactionModel = require('../../db/transaction.js');
 
-const TransactionModel = require('../../db/tx.js');
-const loadTree = require('../loadTree');
+const TxTree = require('../../models/txTree.js');
+const AccountTree = require('../../models/accountTree')
+const Account = require('../../models/account.js');
+const Transaction = require('../../models/transaction.js');
+
+
 const getCircuitInput = require('../../utils/circuitInput_validity.js')
 const snarkjs = require('snarkjs');
-const fs = require('fs');
 
-const wasmFile = "/home/arsene_lupin/WorkSpace/BlockChain/Roll-Up/prover/proof/prepare_proof/multiple_tokens_transfer_and_withdraw_js/multiple_tokens_transfer_and_withdraw.wasm";
-const zkeyFile = "/home/arsene_lupin/WorkSpace/BlockChain/Roll-Up/prover/proof/multiple_tokens_transfer_and_withdraw_final.zkey";
+const wasmFile = "../prover/proof/prepare_proof/multiple_tokens_transfer_and_withdraw_js/multiple_tokens_transfer_and_withdraw.wasm";
+const zkeyFile = "../prover/proof/multiple_tokens_transfer_and_withdraw_final.zkey";
 const vkeyFile = require("../../../../prover/proof/verification_key.json");
 
+
 const TX_DEPTH = 2;
+const BAL_DEPTH = 4;
 
 async function accountChange(txData) {
     var changeId = []
@@ -33,34 +36,65 @@ async function accountChange(txData) {
     return changeId;
 }
 
+function optimalTransaction(transactionSize) {
+    if (transactionSize >= 4) {
+        return 4;
+    } else {
+        return 2;
+    }
+}
+
 module.exports = async function processTx(rollup, signer) {
-    var current = await TreeModel.find().exec();
-    var currentRoot = current.slice(-1);
-    var transactionData = await TransactionModel.find().exec();
-    if (transactionData.length != 4) {
+    var currentTree = await TreeModel.find().sort({ _id: -1 }).limit(1);
+    var currentTreeRoot = currentTree[0];
+    var transactionDataSize = await TransactionModel.count().exec();
+    if (transactionDataSize != 4) {
         return;
     }
-    if (transactionData.length == 0 || transactionData.length % 2 != 0) {
-        return;
-    }
+    var currentAccount = await AccountModel.find();
+
+    var TPB = optimalTransaction(transactionDataSize);
+
+    var transactionData = await TransactionModel.find().limit(TPB);
+
     var transactionId = []
     for (var i = 0; i < transactionData.length; ++i) {
         transactionId[i] = transactionData[i].id;
     }
     var accountChangeId = await accountChange(transactionData);
-    var currentTree = await loadTree();
 
-    console.log(currentTree)
-    txs = new Array(TX_DEPTH ** 2)
+    var zeroAccount = new Account();
+    var accountLeaves = new Array(2 ** BAL_DEPTH).fill(zeroAccount);
+    var depositLeaves = [];
+    for (let i = 0; i < currentAccount.length; i++) {
+        console.log("i: ", i)
+        console.log(currentAccount[i].index)
+        var tmpAccount = new Account(
+            currentAccount[i].index,
+            currentAccount[i].pubkeyX,
+            currentAccount[i].pubkeyY,
+            currentAccount[i].balance,
+            currentAccount[i].nonce,
+            currentAccount[i].tokenType,
+            currentAccount[i].l1Address
+        )
+        accountLeaves[i] = tmpAccount;
+    }
+
+    var newAccountTree = new AccountTree(accountLeaves);
+
+
+
+    txs = new Array(TPB)
     for (var i = 0; i < txs.length; ++i) {
         if (i < transactionData.length) {
-            // console.log(transactionData[i]
             var tx = new Transaction(BigInt(transactionData[i].fromX), BigInt(transactionData[i].fromY), transactionData[i].fromIndex, BigInt(transactionData[i].toX), BigInt(transactionData[i].toY), transactionData[i].toIndex, transactionData[i].nonce, transactionData[i].amount, transactionData[i].tokenType, BigInt(transactionData[i].R8x), BigInt(transactionData[i].R8y), BigInt(transactionData[i].S));
             txs[i] = tx;
         }
     }
+    console.log(txs)
     const txTree = new TxTree(txs);
-    const stateTransition = currentTree.processTxArray(txTree);
+    const stateTransition = newAccountTree.processTxArray(txTree);
     const inputs = getCircuitInput(stateTransition);
     console.log(inputs)
     // inputCircuit = JSON.parse(inputs).map((v) => v.toString());
@@ -81,17 +115,17 @@ module.exports = async function processTx(rollup, signer) {
     console.log(publicSignals);
     console.log(verify);
     if (verify) {
-        var updateStateTx = await rollup.connect(signer).updateState(updateA, updateB, updateC, publicSignals);
-        await updateStateTx.wait()
+        // var updateStateTx = await rollup.connect(signer).updateState(updateA, updateB, updateC, publicSignals);
+        // await updateStateTx.wait()
         await BlockModel.insertMany(transactionData);
         await TransactionModel.deleteMany({ id: transactionId })
         for (var i = 0; i < accountChangeId.length; ++i) {
             var index = accountChangeId[i];
-            var newBalance = ((currentTree.accounts)[index]).balance;
-            var newNonce = ((currentTree.accounts)[index]).nonce;
+            var newBalance = ((newAccountTree.accounts)[index]).balance;
+            var newNonce = ((newAccountTree.accounts)[index]).nonce;
             await AccountModel.findOneAndUpdate({ index: index }, { balance: newBalance, nonce: newNonce }, { upsert: true });
         }
 
-        await TreeModel({ root: currentTree.root, account: currentRoot[0].account }).save();
+        const C = await TreeModel({index: currentTree[0].index + 1, root: newAccountTree.root, leafNodes: newAccountTree.leafNodes, depth: newAccountTree.depth, innerNodes: newAccountTree.innerNodes}).save();
     }
 }

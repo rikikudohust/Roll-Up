@@ -2,7 +2,11 @@ const express = require('express');
 const mongoose = require('mongoose');
 
 const dbURL = 'mongodb://test:test@localhost:27027/rollup';
-const rollUpRouter = require('./src/routes/rollUpRoutes')
+const userRouter = require('./src/routes/userRoutes')
+const transactionRoutes = require('./src/routes/transactionRoutes');
+const walletRoutes = require('./src/routes/walletRoutes');
+const depositRoutes = require('./src/routes/depositRoutes');
+const cors = require('cors');
 mongoose.connect(dbURL);
 const database = mongoose.connection;
 database.on('error', (error) => {
@@ -14,7 +18,8 @@ database.once('connected', () => {
 })
 
 const app = express();
-const port = 3000;
+const port = 7000;
+app.use(cors());
 app.use(express.json());
 app.use(
     express.urlencoded({
@@ -24,7 +29,11 @@ app.use(
 app.get("/", (req, res) => {
   res.json({ message: "ok" });
 });
-app.use("/rollup", rollUpRouter);
+app.use("/users", userRouter);
+app.use("/transactions", transactionRoutes);
+app.use("/wallets", walletRoutes);
+app.use("/deposit", depositRoutes);
+
 app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500;
   console.error(err.message, err.stack);

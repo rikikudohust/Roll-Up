@@ -3,8 +3,7 @@ const poseidon = require('../utils/poseidon.js');
 module.exports = class Account {
     constructor(
         _index = 0, _pubkeyX = 0, _pubkeyY = 0, 
-        _balance = 0, _nonce = 0, _tokenType  = 0,
-        _prvkey = 0
+        _balance = 0, _nonce = 0, _tokenType  = 0, _l1Addr = 0
     ) {
         this.index = _index;
         this.pubkeyX = _pubkeyX;
@@ -13,7 +12,7 @@ module.exports = class Account {
         this.nonce = _nonce;
         this.tokenType = _tokenType;
 
-        this.prvkey = _prvkey;
+        this.l1Addr = _l1Addr;
         this.hash = this.hashAccount()
     }
     

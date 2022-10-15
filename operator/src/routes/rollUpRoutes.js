@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const { getInformationFromIndex } = require('../services/monitoring/userService.js');
+const { getInformationFromIndex, getAllAccounts } = require('../services/monitoring/userService.js');
 const { getAllTransaction, getTransactionByIndex } = require('../services/monitoring/transactionService.js');
 const { getCurrentTree } = require('../services/monitoring/treeService.js')
-const TxModel = require('../db/tx.js');
+const TxModel = require('../db/transaction.js');
 const AccModel = require('../db/account.js');
 const DepositModel = require('../db/deposit.js');
 const TreeModel = require('../db/tree.js')
@@ -42,7 +42,7 @@ router.get('/transactions/user/:id', async function (req, res, next) {
     }
 });
 
-router.get('/user/index/:id', async function (req, res, next) {
+router.get('/users/index/:id', async function (req, res, next) {
     try {
         res.status(200).json(await getInformationFromIndex(req.params.id));
     } catch (err) {
@@ -50,12 +50,20 @@ router.get('/user/index/:id', async function (req, res, next) {
         next(err);
     }
 });
-router.get('/user/address/:address', async function (req, res, next) {
+router.get('/users/address/:address', async function (req, res, next) {
     try {
         res.json(await getInformationFromAddress(req.params.address));
     } catch (err) {
         console.error("Err uer/index/:address", err.message);
         next(err);
+    }
+})
+
+router.get('/users', async (req,res, next) => {
+    try {
+        res.status(200).json(await getAllAccounts());
+    } catch(err) {
+        console.error("Error :/users/", err.message);
     }
 })
 
