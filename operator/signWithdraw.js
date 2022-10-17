@@ -3,6 +3,10 @@ const mongoose = require('mongoose')
 const Transaction = require('./src/models/transaction');
 const AccountModel = require('./src/db/account');
 const fs = require('fs');
+const poseidon = require('./src/utils/poseidon');
+const eddsa = require('./src/utils/eddsa');
+const { unstringifyBigInts } = require('./src/utils/stringifybigint');
+
 
 const dbURL = 'mongodb://test:test@localhost:27027/rollup';
 mongoose.connect(dbURL);
@@ -51,20 +55,37 @@ async function signTransaction(prvkey, fromIndex, toIndex, amount, tokenType) {
     };
 }
 
+async function signWithdraw(prvkey, fromIndex, recipient) {
+    var AccountFrom = await AccountModel.findOne({ index: fromIndex });
+    var AccountTo = await AccountModel.findOne({ index: toIndex });
+
+    var hashWithdraw = poseidon([AccountFrom.nonce.toString(), recipient.toString()])
+    const newSign = eddsa.signPoseidon(Buffer.from(prvkey, "hex"), unstringifyBigInts(hashWithdraw));
+    return {
+        R8x: newSign.R8[0].toString(),
+        R8y: newSign.R8[1].toString(),
+        S: newSign.S.toString()
+    }
+}
+
 main = async () => {
-    prvkey = ["2d542906c724461e5140415d8ce56a559ebfca4316ab70563835fbd574100c00", "358166546eb5ab98f5f9f9f7b094a536dc0dc5e197ee6dca7177cb747167077c", "1e097a61aa6ba35c12613c46a9ff2dc58e6a0a4e066c2f7b79162c8427196445", "59dccb02c10ebb2e1e7305c7a84a34f79cc68316926adcb04a9835ec850210a1"];
-    fromIndex = [2,3,4,5];
-    toIndex = [3,4,5,2];
-    amount = [10, 20, 20, 10];
-    tokenType = [1, 1, 1, 1];
+    prvkey = ["bc7926f6d6c4f792be56f4df0a285d579d9fd7d4dd328a01ecb9e71f627afdb6"]
+    fromIndex = [1];
+    toIndex = [0];
+    amount = [10];
+    tokenType = [1];
+    recipient = ["0xbD3342841b811fA57C54D1470785cd6b36EB65D9"];
     dataJson = []
+    withdrawJson = []
     for (let i = 0; i < amount.length; ++i) {
         transactionData = await signTransaction(prvkey[i], fromIndex[i], toIndex[i], amount[i], tokenType[i]);
+        withdrawData = await signWithdraw(prvkey[i], fromIndex[i], recipient[i])
         dataJson.push(transactionData);
+        withdrawJson.push(withdrawData);
     }
 
     fs.writeFileSync(
-        "./tmp/transferInput.json",
+        "./tmp/input.json",
         JSON.stringify(dataJson, (key, value) =>
             typeof value === 'bigint'
                 ? value.toString()
@@ -73,6 +94,18 @@ main = async () => {
         "utf-8"
     );
 
+    fs.writeFileSync(
+        "./tmp/withdrawInput.json",
+        JSON.stringify(withdrawJson, (key, value) =>
+            typeof value === 'bigint'
+                ? value.toString()
+                : value // return everything else unchanged
+        ),
+        "utf-8"
+    );
 }
 
-main().then;
+main().catch((error) => {
+    console.error(error);
+    process.exitCode = 1;
+});

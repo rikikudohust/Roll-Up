@@ -1,7 +1,7 @@
 const express = require('express'); 
 const router = express.Router();
 
-const { postTransaction,getPendingTransactionByAddress, getTransactionByAddress, getTransactionById, getTransactions} = require('../services/monitoring/transactionService');
+const { getTransactionDetail, postTransaction,getPendingTransactionByAddress, getTransactionByAddress, getTransactionById, getTransactions} = require('../services/monitoring/transactionService');
 
 router.get('/', async function (req, res, next) {
     try {
@@ -58,4 +58,12 @@ router.post('/', async function (req, res, next) {
     }
 })
 
+router.post('/detail', async function (req, res, next) {
+    try {
+        res.status(200).json(await getTransactionDetail(req.body));
+    } catch(err) {
+        console.error("Error POST /transactions/detail", err);
+        next(err);
+    }
+})
 module.exports = router;
