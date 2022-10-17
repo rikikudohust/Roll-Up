@@ -76,7 +76,7 @@ module.exports = async function processDeposit(rollup, signer) {
         var newTree = new Tree(accountLeaves.map(v => v.hash));
         // var newDepositTree = new Tree(depositLeaves);
 
-        var proofData = (newTree.getProof( 4, BAL_DEPTH));
+        var proofData = (newTree.getProof( accountSize, BAL_DEPTH));
         const subTreeProof = proofData.proof.slice(Math.log2(limitProcess), BAL_DEPTH);
         const subTreeProofPos = proofData.proofPos.slice(Math.log2(limitProcess), BAL_DEPTH);
         var proofDepositData = {
@@ -84,6 +84,8 @@ module.exports = async function processDeposit(rollup, signer) {
             subTreeProofPos: subTreeProofPos,
             subTreeProof: subTreeProof.map(v => v.toString())
         }
+        console.log(proofDepositData)
+
         var processDepositTx = await rollup.connect(signer).processDeposits(proofDepositData.subTreeDepth, proofDepositData.subTreeProofPos, proofDepositData.subTreeProof);
         await processDepositTx.wait();
 

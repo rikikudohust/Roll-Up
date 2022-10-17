@@ -115,8 +115,8 @@ module.exports = async function processTx(rollup, signer) {
     console.log(publicSignals);
     console.log(verify);
     if (verify) {
-        // var updateStateTx = await rollup.connect(signer).updateState(updateA, updateB, updateC, publicSignals);
-        // await updateStateTx.wait()
+        var updateStateTx = await rollup.connect(signer).updateState(updateA, updateB, updateC, publicSignals);
+        await updateStateTx.wait()
         await BlockModel.insertMany(transactionData);
         await TransactionModel.deleteMany({ id: transactionId })
         for (var i = 0; i < accountChangeId.length; ++i) {

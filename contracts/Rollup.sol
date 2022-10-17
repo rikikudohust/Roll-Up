@@ -33,10 +33,13 @@ contract Rollup is UpdateVerifier, WithdrawVerifier {
 
     uint256 public currentRoot;
     address public coordinator;
-    uint256[] public pendingDeposits;
+    // uint256[] public pendingDeposits;
+    uint256[] public zeroDeposits;
     uint256 public queueNumber;
     uint256 public depositSubtreeHeight;
     uint256 public updateNumber;
+    uint256 public currentDepositPos;
+    mapping(uint256 => uint256[]) public pendingDeposits;
 
     uint256 public BAL_DEPTH = 4;
     uint256 public TX_DEPTH = 2;
@@ -70,6 +73,7 @@ contract Rollup is UpdateVerifier, WithdrawVerifier {
         queueNumber = 0;
         depositSubtreeHeight = 0;
         updateNumber = 0;
+        currentDepositPos = 0;
     }
 
     modifier onlyCoordinator() {
@@ -139,7 +143,7 @@ contract Rollup is UpdateVerifier, WithdrawVerifier {
         depositArray[4] = tokenType;
 
         uint256 depositHash = poseidonMerkle.hashPoseidon(depositArray);
-        pendingDeposits.push(depositHash);
+        pendingDeposits[currentDepositPos].push(depositHash);
         emit RequestDeposit(pubkey, amount, tokenType);
         queueNumber++;
         uint256 tmpDepositSubtreeHeight = 0;
@@ -147,11 +151,11 @@ contract Rollup is UpdateVerifier, WithdrawVerifier {
 
         while (tmp % 2 == 0) {
             uint256[] memory array = new uint256[](2);
-            array[0] = pendingDeposits[pendingDeposits.length - 2];
-            array[1] = pendingDeposits[pendingDeposits.length - 1];
-            pendingDeposits[pendingDeposits.length - 2] = poseidonMerkle
+            array[0] = pendingDeposits[currentDepositPos][pendingDeposits[currentDepositPos].length - 2];
+            array[1] = pendingDeposits[currentDepositPos][pendingDeposits[currentDepositPos].length - 1];
+            pendingDeposits[currentDepositPos][pendingDeposits[currentDepositPos].length - 2] = poseidonMerkle
                 .hashPoseidon(array);
-            removeDeposit(pendingDeposits.length - 1);
+            removeDeposit(pendingDeposits[currentDepositPos].length - 1);
             tmp = tmp / 2;
             tmpDepositSubtreeHeight++;
         }
@@ -175,7 +179,7 @@ contract Rollup is UpdateVerifier, WithdrawVerifier {
                 )
         ); // Specified subtree is not empty
         currentRoot = poseidonMerkle.getRootFromProof(
-            pendingDeposits[0],
+            pendingDeposits[currentDepositPos][0],
             subtreePosition,
             subtreeProof
         );
@@ -273,6 +277,17 @@ contract Rollup is UpdateVerifier, WithdrawVerifier {
         pendingTokens[tokenContractAddress] = true;
     }
 
+    /** @notice Only use for test
+     * 
+     */
+    function  refreshContract() external onlyCoordinator {
+        currentRoot = poseidonMerkle.zeroCache(BAL_DEPTH);
+        queueNumber = 0;
+        depositSubtreeHeight = 0;
+        updateNumber = 0;
+        currentDepositPos += 1;
+    }
+
     function approveToken(address tokenContractAddress)
         external
         onlyCoordinator
@@ -285,12 +300,13 @@ contract Rollup is UpdateVerifier, WithdrawVerifier {
 
     // helper functions
     function removeDeposit(uint256 index) internal returns (uint256[] memory) {
-        require(index < pendingDeposits.length); // Index is out of bounds
+        require(index < pendingDeposits[currentDepositPos].length); // Index is out of bounds
 
-        for (uint256 i = index; i < pendingDeposits.length - 1; i++) {
-            pendingDeposits[i] = pendingDeposits[i + 1];
+        for (uint256 i = index; i < pendingDeposits[currentDepositPos].length - 1; i++) {
+            pendingDeposits[currentDepositPos][i] = pendingDeposits[currentDepositPos][i + 1];
         }
-        pendingDeposits.pop();
-        return pendingDeposits;
+        pendingDeposits[currentDepositPos].pop();
+        return pendingDeposits[currentDepositPos];
     }
+
 }

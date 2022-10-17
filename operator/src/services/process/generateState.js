@@ -9,7 +9,7 @@ const AccountModel = require('../../db/account.js');
 module.exports = async function generateState(rollup, signer) {
     try {
         var tree = await TreeModel.find().exec();
-        if (tree.length != 0) {
+        if (tree.length != 0 ) {
             return;
         }
 
@@ -32,7 +32,7 @@ module.exports = async function generateState(rollup, signer) {
             depth: BAL_DEPTH,
             root: zeroTree.root,
             innerNodes: zeroTree.innerNodes
-        }).save(opts);
+        }).save();
 
         console.log("State Initialized");
         return;

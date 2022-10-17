@@ -32,10 +32,6 @@ const accountSchema = new mongoose.Schema({
         require: true,
         type: String
     },
-    path: {
-        require: true,
-        type: [Number]
-    }
 })
 
 module.exports = mongoose.model('Account', accountSchema);
