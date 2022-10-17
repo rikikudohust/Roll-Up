@@ -6,6 +6,7 @@ const userRouter = require('./src/routes/userRoutes')
 const transactionRoutes = require('./src/routes/transactionRoutes');
 const walletRoutes = require('./src/routes/walletRoutes');
 const depositRoutes = require('./src/routes/depositRoutes');
+const withdrawRoutes = require('./src/routes/withdrawRoutes');
 const cors = require('cors');
 mongoose.connect(dbURL);
 const database = mongoose.connection;
@@ -33,6 +34,7 @@ app.use("/users", userRouter);
 app.use("/transactions", transactionRoutes);
 app.use("/wallets", walletRoutes);
 app.use("/deposit", depositRoutes);
+app.use("/withdraw", withdrawRoutes)
 
 app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 500;

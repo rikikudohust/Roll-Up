@@ -107,12 +107,12 @@ contract Rollup is UpdateVerifier, WithdrawVerifier {
         uint256 amount,
         uint256 tokenType
     ) external payable {
-        require(
-            !ethAddress[
-                uint256(keccak256(abi.encodePacked(pubkey, tokenType)))
-            ],
-            "This address already exists"
-        );
+        // require(
+        //     !ethAddress[
+        //         uint256(keccak256(abi.encodePacked(pubkey, tokenType)))
+        //     ],
+        //     "This address already exists"
+        // );
         if (tokenType == 0) {
             require(msg.sender == coordinator, "Reserved for coordinator");
             require(amount == 0 && msg.value == 0); // tokenType 0 does not have real value

@@ -47,12 +47,13 @@ async function postTransaction(data) {
     var fromY = data.fromY;
     var toX = data.toX;
     var toY = data.toY;
+    var nonce = data.nonce;
     var amount = data.amount;
     var tokenType = data.tokenType;
     var signature = data.signature;
 
-    var fromData = await AccountModel.findOne({ pubkeyX: fromX , pubkeyY: fromY}).exec();
-    var toData = await AccountModel.findOne({ pubkeyX: toX , pubkeyY: toY }).exec();
+    var fromData = await AccountModel.findOne({ pubkeyX: fromX, pubkeyY: fromY }).exec();
+    var toData = await AccountModel.findOne({ pubkeyX: toX, pubkeyY: toY }).exec();
     if (fromData == null || toData == null) {
         throw new Error("Account not exist");
     }
@@ -64,7 +65,7 @@ async function postTransaction(data) {
         toData.pubkeyX,
         toData.pubkeyY,
         toData.index,
-        fromData.nonce,
+        nonce,
         amount,
         tokenType,
         BigInt(signature.R8x),
@@ -83,10 +84,37 @@ async function postTransaction(data) {
     ));
 }
 
+async function getTransactionDetail(data) {
+    fromAddress = data.fromAddress;
+    toAddress = data.toAddress;
+
+    fromAccount = await AccountModel.findOne({ l1Address: fromAddress }).exec();
+    toAccount = await AccountModel.findOne({ l1Address: toAddress }).exec();
+
+    if (fromAccount == null || toAccount == null) {
+        throw new Error("Invalid acount data");
+    }
+
+    transactionData = {
+        fromX: fromAccount.pubkeyX,
+        fromY: fromAccount.pubkeyY,
+        fromIndex: fromAccount.index,
+        toX: toAccount.pubkeyX,
+        toY: toAccount.pubkeyY,
+        toIndex: toAccount.index,
+        amount: data.amount,
+        nonce: fromAccount.nonce,
+        tokenType: data.tokenType
+    }
+
+    return transactionData;
+}
+
 module.exports = {
     getTransactions,
     getTransactionById,
     getTransactionByAddress,
     getPendingTransactionByAddress,
-    postTransaction
+    postTransaction,
+    getTransactionDetail
 }

@@ -1,4 +1,8 @@
 contract = {
-    merkle: "0x0E2ccf61b8e810023710799D34Dc547CC73770a2",
-    rollup: "0x532dB50DcBc202158dE93bC48eaC8Db4C44F4d09"
+    merkle: "0xA7E3983545F35678bc37dd5789a8B3FaeF529afE",
+    rollup: "0x3cde180D5166b701a17a884db5eE014291F7b949"
+}
+
+module.exports = {
+    contract
 }

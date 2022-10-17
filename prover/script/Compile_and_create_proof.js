@@ -28,7 +28,7 @@ function CompileCircuit()
     // execute('snarkjs zkey export verificationkey ../proof/multiple_tokens_transfer_and_withdraw_final.zkey ../proof/verification_key.json')
 
     console.log('Generating a Smart Contract ...')
-    execute('snarkjs zkey export solidityverifier ../proof/multiple_tokens_transfer_and_withdraw_final.zkey ../contracts/verifier.sol')
+    execute('snarkjs zkey export solidityverifier ../proof/multiple_tokens_transfer_and_withdraw_final.zkey ../contracts/UpdateVerifier.sol')
 }
 
 function generateProof()

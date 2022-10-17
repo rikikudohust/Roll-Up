@@ -91,7 +91,7 @@ module.exports = async function processDeposit(rollup, signer) {
 
         const A = await AccountModel.insertMany(depositLeaves);
         const B = await DepositModel.deleteMany({_id:depoistId});
-        const C = await TreeModel({index: currentTree[0].index, root: newTree.root, leafNodes: newTree.leafNodes, depth: newTree.depth, innerNodes: newTree.innerNodes}).save();
+        const C = await TreeModel({index: currentTree[0].index + 1, root: newTree.root, leafNodes: newTree.leafNodes, depth: newTree.depth, innerNodes: newTree.innerNodes}).save();
 
         console.log("Update Process Deposit Success");
         return;

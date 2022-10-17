@@ -67,8 +67,6 @@ module.exports = async function processTx(rollup, signer) {
     var accountLeaves = new Array(2 ** BAL_DEPTH).fill(zeroAccount);
     var depositLeaves = [];
     for (let i = 0; i < currentAccount.length; i++) {
-        console.log("i: ", i)
-        console.log(currentAccount[i].index)
         var tmpAccount = new Account(
             currentAccount[i].index,
             currentAccount[i].pubkeyX,
@@ -86,13 +84,40 @@ module.exports = async function processTx(rollup, signer) {
 
 
     txs = new Array(TPB)
+    newForceTx = []
     for (var i = 0; i < txs.length; ++i) {
-        if (i < transactionData.length) {
-            var tx = new Transaction(BigInt(transactionData[i].fromX), BigInt(transactionData[i].fromY), transactionData[i].fromIndex, BigInt(transactionData[i].toX), BigInt(transactionData[i].toY), transactionData[i].toIndex, transactionData[i].nonce, transactionData[i].amount, transactionData[i].tokenType, BigInt(transactionData[i].R8x), BigInt(transactionData[i].R8y), BigInt(transactionData[i].S));
-            txs[i] = tx;
-        }
+        var tx = new Transaction(
+            BigInt(transactionData[i].fromX),
+            BigInt(transactionData[i].fromY),
+            transactionData[i].fromIndex,
+            BigInt(transactionData[i].toX),
+            BigInt(transactionData[i].toY),
+            transactionData[i].toIndex,
+            transactionData[i].nonce,
+            transactionData[i].amount,
+            transactionData[i].tokenType,
+            BigInt(transactionData[i].R8x),
+            BigInt(transactionData[i].R8y),
+            BigInt(transactionData[i].S)
+        );
+        txs[i] = tx;
+        newForceTx.push({
+            fromX: tx.fromX,
+            fromY: tx.fromY,
+            fromIndex: tx.fromIndex,
+            toX: tx.toX,
+            toY: tx.toY,
+            toIndex: tx.toIndex,
+            nonce: tx.nonce,
+            amount: tx.amount,
+            tokenType: tx.tokenType,
+            hash: tx.hash,
+            R8x: tx.R8x,
+            R8y: tx.R8y,
+            S: tx.S,
+            block: currentTreeRoot.index + 1,
+        })
     }
-    console.log(txs)
     const txTree = new TxTree(txs);
     const stateTransition = newAccountTree.processTxArray(txTree);
     const inputs = getCircuitInput(stateTransition);
@@ -117,7 +142,7 @@ module.exports = async function processTx(rollup, signer) {
     if (verify) {
         var updateStateTx = await rollup.connect(signer).updateState(updateA, updateB, updateC, publicSignals);
         await updateStateTx.wait()
-        await BlockModel.insertMany(transactionData);
+        await BlockModel.insertMany(newForceTx);
         await TransactionModel.deleteMany({ id: transactionId })
         for (var i = 0; i < accountChangeId.length; ++i) {
             var index = accountChangeId[i];
@@ -126,6 +151,6 @@ module.exports = async function processTx(rollup, signer) {
             await AccountModel.findOneAndUpdate({ index: index }, { balance: newBalance, nonce: newNonce }, { upsert: true });
         }
 
-        const C = await TreeModel({index: currentTree[0].index + 1, root: newAccountTree.root, leafNodes: newAccountTree.leafNodes, depth: newAccountTree.depth, innerNodes: newAccountTree.innerNodes}).save();
+        const C = await TreeModel({ index: currentTree[0].index + 1, root: newAccountTree.root, leafNodes: newAccountTree.leafNodes, depth: newAccountTree.depth, innerNodes: newAccountTree.innerNodes }).save();
     }
 }

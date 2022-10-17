@@ -37,7 +37,7 @@ const transactionSchema = new mongoose.Schema({
         require: true,
         type: Number
     },
-    hashTx: {
+    hash: {
         require: false,
         type: String
     },
