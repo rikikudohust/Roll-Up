@@ -46,8 +46,18 @@ async function main() {
     await poseidonMerkle.deployed();
     console.log("Deploy PoseidonMerkle Success at", poseidonMerkle.address);
 
+    var UpdateVerifier = await ethers.getContractFactory("UpdateVerifier");
+    const updateVerifier = await UpdateVerifier.deploy();
+    await updateVerifier.deployed();
+
+    var WithdrawVerifier = await ethers.getContractFactory("WithdrawVerifier");
+    const withdrawVerifier = await WithdrawVerifier.deploy();
+    await withdrawVerifier.deployed();
+    console.log("Deploy WithdrawVerifier success at", withdrawVerifier.address);
+    console.log("Deploy UpdateVerifier success at",updateVerifier.address);
+
     const Rollup = await hre.ethers.getContractFactory("Rollup");
-    const rollup = await Rollup.deploy(poseidonMerkle.address);
+    const rollup = await Rollup.deploy(poseidonMerkle.address,updateVerifier.address,withdrawVerifier.address);
 
     await rollup.deployed();
 

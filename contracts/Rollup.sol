@@ -2,9 +2,6 @@
 
 pragma solidity ^0.8.0;
 
-import "./UpdateVerifier.sol";
-import "./WithdrawVerifier.sol";
-
 contract IPoseidonMerkle {
     uint256[16] public zeroCache;
 
@@ -27,8 +24,28 @@ contract IERC20 {
     function transfer(address recipient, uint256 value) public returns (bool) {}
 }
 
-contract Rollup is UpdateVerifier, WithdrawVerifier {
+contract IUpdateVerifier{
+        function verifyProof(
+            uint[2] memory,
+            uint[2][2] memory,
+            uint[2] memory,
+            uint[15] memory
+        ) public view returns (bool){}
+}
+
+contract IWithdrawVerifier{
+        function verifyProof(
+            uint[2] memory,
+            uint[2][2] memory,
+            uint[2] memory,
+            uint[3] memory
+        ) public view returns (bool){}
+}
+
+contract Rollup{
     IPoseidonMerkle public poseidonMerkle;
+    IUpdateVerifier public updateVerifier;
+    IWithdrawVerifier public withdrawVerifier;
     IERC20 public tokenContract;
 
     uint256 public currentRoot;
@@ -59,8 +76,10 @@ contract Rollup is UpdateVerifier, WithdrawVerifier {
     event UpdatedState(uint256 currentRoot, uint256 oldRoot, uint256 txRoot);
     event Withdraw(uint256[9] accountInfo, address recipient);
 
-    constructor(address _poseidonMerkle) {
+    constructor(address _poseidonMerkle,address _updateVerifier,address _withdrawVerifier) {
         poseidonMerkle = IPoseidonMerkle(_poseidonMerkle);
+        updateVerifier = IUpdateVerifier(_updateVerifier);
+        withdrawVerifier = IWithdrawVerifier(_withdrawVerifier);
         currentRoot = poseidonMerkle.zeroCache(BAL_DEPTH);
 
         coordinator = msg.sender;
@@ -90,7 +109,7 @@ contract Rollup is UpdateVerifier, WithdrawVerifier {
         // Can only update forward
         require(currentRoot == input[2]); // Input does not match current root
         // Validate proof
-        require(verifyUpdateProof(a, b, c, input)); // SNARK proof is invalid
+        require(updateVerifier.verifyProof(a, b, c, input)); // SNARK proof is invalid
         // Update merkle root
         currentRoot = input[0];
         updateNumber++;
@@ -135,7 +154,7 @@ contract Rollup is UpdateVerifier, WithdrawVerifier {
         depositArray[0] = pubkey[0];
         depositArray[1] = pubkey[1];
         depositArray[2] = amount;
-        depositArray[3] = 0;
+        depositArray[3] = 0;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
         depositArray[4] = tokenType;
 
         uint256 depositHash = poseidonMerkle.hashPoseidon(depositArray);
@@ -239,7 +258,7 @@ contract Rollup is UpdateVerifier, WithdrawVerifier {
         msgArray[1] = uint256(uint160(recipient));
 
         require(
-            verifyWithdrawProof(
+            withdrawVerifier.verifyProof(
                 a,
                 b,
                 c,
