@@ -1,7 +1,5 @@
 import {
-  Card,
-  CardContent,
-  CardMedia,
+  Box,
   Typography,
   makeStyles,
 } from "@material-ui/core";
@@ -36,24 +34,41 @@ export const WithdrawHistoryDetail = ({ data }) => {
   // console.log(data)
   const address = data.nftOwner
   return (
-    <Card className={classes.root}>
-      <CardContent  className={classes.cardContent}>
-          <Typography variant="h5" gutterBottom>
-            Token Id: {data.tokenId}
-          </Typography>
-          <Typography variant="h5" gutterBottom>
-            NFT owner: {formatAddress(address)}
-          </Typography>
-          <Typography variant="h5" gutterBottom>
-            Start time: &nbsp;
-            <Moment format="hh:mm">
-              {data.startTime}
-            </Moment>
-          </Typography>
-          <Typography variant="h5" gutterBottom>
-            Amount: {data.amount}
-          </Typography>
-      </CardContent>
-    </Card>
+    <Box>
+      <Typography variant="h5" gutterBottom>
+        Token Id: {data.tokenId}
+      </Typography>
+      <Typography variant="h5" gutterBottom>
+        NFT owner: {formatAddress(address)}
+      </Typography>
+      <Typography variant="h5" gutterBottom>
+        Start time: &nbsp;
+        <Moment format="hh:mm">
+          {data.startTime}
+        </Moment>
+      </Typography>
+      <Typography variant="h5" gutterBottom>
+        Amount: {data.amount}
+      </Typography>
+    </Box>
+    // <Card className={classes.root}>
+    //   <CardContent  className={classes.cardContent}>
+    //       <Typography variant="h5" gutterBottom>
+    //         Token Id: {data.tokenId}
+    //       </Typography>
+    //       <Typography variant="h5" gutterBottom>
+    //         NFT owner: {formatAddress(address)}
+    //       </Typography>
+    //       <Typography variant="h5" gutterBottom>
+    //         Start time: &nbsp;
+    //         <Moment format="hh:mm">
+    //           {data.startTime}
+    //         </Moment>
+    //       </Typography>
+    //       <Typography variant="h5" gutterBottom>
+    //         Amount: {data.amount}
+    //       </Typography>
+    //   </CardContent>
+    // </Card>
   );
 };

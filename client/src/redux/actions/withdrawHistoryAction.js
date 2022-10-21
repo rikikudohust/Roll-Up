@@ -2,17 +2,17 @@ import axios from 'axios';
 import * as actionType from '../constants/constance'
 
 export const withdrawHistoryAction = () => async (dispatch) => {
-  const data = await axios.get("https://backend.trava.finance/nft/api/v1/getNFTWithdrawn?page=0&size=100&address=0xD2B418ba23f2F3592D5821D1543432619953cc7A")
+  const data = await axios.get(" http://localhost:7000/transactions/")
   // console.log("🚀 ~ file: addressAction.js ~ line 22 ~ withdrawHistory ~ data", data)
   try {
-    dispatch({type: actionType.GET_WITHDRAW_REQUEST})
+    dispatch({type: actionType.GET_VALIDATED_TRANSACTION})
     dispatch({
-      type: actionType.GET_WITHDRAW_SUCCESS,
+      type: actionType.GET_VALIDATED_TRANSACTION_SUCCESS,
       payload: data.data.data.list
   })
   } catch (error) {
     dispatch({
-      type: actionType.GET_WITHDRAW_FALSE,
+      type: actionType.GET_VALIDATED_TRANSACTION_FALSE,
       payload: error.response 
   })
   }

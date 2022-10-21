@@ -1,13 +1,20 @@
 import { Link as RouterLink } from "react-router-dom";
 import WalletButton from "../walletButton";
+import { Box } from "@material-ui/core";
 
 export default function Headers() {
   return (
-    <div>
-      <div>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'row',
+        justifyContent: 'flex-end'
+      }}
+    >
+      <Box>
         <WalletButton />
-      </div>
-      <div>
+      </Box>
+      {/* <div>
         <RouterLink to="/deposit">Deposit to L2</RouterLink>
       </div>
       <div>
@@ -15,7 +22,7 @@ export default function Headers() {
       </div>
       <div>
         <RouterLink to="/withdraw">Withdraw</RouterLink>
-      </div>
-    </div>
+      </div> */}
+    </Box>
   );
 }

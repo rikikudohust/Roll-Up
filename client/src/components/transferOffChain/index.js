@@ -1,47 +1,120 @@
-import { Button, TextField } from "@material-ui/core";
+import { Box, Button, Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, TextField, Step, StepLabel, Stepper, Typography } from "@material-ui/core";
 import { useState } from "react";
+import React from "react";
 import Web3 from "web3";
 import BEP20_ABI from "../web3/BEP20_ABI.json";
 import BigNumber from "bignumber.js";
 import { useSelector } from "react-redux";
 import axios from "axios"
+import { ContactPhoneSharp } from "@material-ui/icons";
 
-export default function TransferOffChain() {
-  const [amount,setAmount]=useState(null);
-  const [toAddress,setToAddress]=useState(null);
+const steps = ['Send', 'Sign Message'];
+
+export default function Send() {
+  const [open, setOpen] = useState(false);
+  const [amount, setAmount] = useState(null);
+  const [toAddress, setToAddress] = useState(null);
   const [tokenType, setTokenType] = useState(null);
+  const [prvkey, setPrvkey] = useState(null);
+
   const web3Reader = new Web3(window.ethereum);
   const address = useSelector((state) => state.address.address);
 
   const contract = new web3Reader.eth.Contract(
     BEP20_ABI,
-    "0xBe750d4701cA96976042ce51486Ebe0197604549"
+    "0x15aE9788ae049787C19145400305CDE1AcE3c52a"
+
   );
+  const handleClickOpen = () => {
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  };
+
+  function handleAmountChange(ev) {
+    setAmount((ev.target.value));
+  }
+  function handleToAddressChange(ev) {
+    setToAddress(ev.target.value);
+  }
+  function handleTokenTypeChange(ev) {
+    setTokenType((ev.target.value));
+  }
+
+  function handlePrvkeyChange(ev) {
+    setPrvkey((ev.target.value));
+  }
 
   async function _transfer() {
-    var accountData = await axios.get("accountData",{ "toAddress": toAddress,"amount": amount, "tokenType": tokenType})
-    var signedData=await web3Reader.eth.sign(await web3Reader.utils.sha3(accountData),address)
-    await axios.post("/rollup/transaction/",signedData).then(res => {
+    var _transferData = {
+      "fromAddress": address,
+      "toAddress": toAddress.toLowerCase(),
+      "amount": amount,
+      "tokenType": tokenType,
+      "prvkey": prvkey
+    }
+    console.log(_transferData)
+    await axios.post('http://localhost:7000/transactions/test/', _transferData).then(res => {
       console.log(res.data)
     })
   }
 
-  function handleAmountChange(ev) {
-    setAmount(BigNumber(ev.target.value).toFixed());
-  }
-  function handleToAddressChange(ev) {
-    setToAddress(BigNumber(ev.target.value).toFixed());
-  }
-  function handleTokenTypeChange(ev) {
-    setTokenType(BigNumber(ev.target.value).toFixed());
-  }
 
   return (
-    <div style={{ margin:'20px' }}>
-      <div style={{ margin: '20px' }} >{"To Address: "}<TextField style={{ width: '500px' }} onChange={handleToAddressChange}/></div>
-      <div style={{ margin: '20px' }}> {"Token type: "}<TextField onChange={handleTokenTypeChange} /></div>
-      <div style={{ margin: '20px' }}> {"Amount: "}<TextField onChange={handleAmountChange} /></div>
-      <Button style={{ backgroundColor:'pink', marginLeft:'150px'}} onClick={_transfer}> Transfer </Button>{" "}
-    </div>
-  );
+    <Box>
+      <Button style={{ backgroundColor: 'green', marginLeft: '5px' }} onClick={handleClickOpen}>
+        Send
+      </Button>
+      <Dialog open={open} onClose={handleClose}>
+        <DialogTitle>Send Asset</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            id="To Address"
+            label="To Address"
+            fullWidth
+            variant="standard"
+            onChange={handleToAddressChange}
+          />
+
+          <TextField
+            autoFocus
+            margin="dense"
+            id="prvkey"
+            label="prvkey"
+            fullWidth
+            variant="standard"
+            onChange={handlePrvkeyChange}
+          />
+
+          <TextField
+            autoFocus
+            margin="dense"
+            id="amount"
+            label="Amount"
+            fullWidth
+            variant="standard"
+            onChange={handleAmountChange}
+          />
+
+          <TextField
+            autoFocus
+            margin="dense"
+            id="tokenType"
+            label="Token Type"
+            fullWidth
+            variant="standard"
+            onChange={handleTokenTypeChange}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose}>Cancel</Button>
+          <Button onClick={_transfer}>Confirm</Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
+  )
 }
