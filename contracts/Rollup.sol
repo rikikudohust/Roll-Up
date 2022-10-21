@@ -200,7 +200,7 @@ contract Rollup is UpdateVerifier, WithdrawVerifier {
         txLeftSubleaf[3] = txInfo[4];
         uint256[] memory txRightSubleaf = new uint256[](4);
         txRightSubleaf[0] = txInfo[2];
-        txRightSubleaf[1] = txInfo[4];
+        txRightSubleaf[1] = txInfo[5];
         txRightSubleaf[2] = txInfo[6];
         txRightSubleaf[3] = txInfo[7];
 
