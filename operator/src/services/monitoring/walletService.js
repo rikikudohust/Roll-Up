@@ -8,7 +8,8 @@ async function genereteNewWallet() {
     const root = hdkey.fromMasterSeed(randMnemonic);
     const node = root.derive(rootPath);
     const nodeEddsa = node.derive(`m/0`);
-    const privateKey = nodeEddsa.privateKey;
+    // const privateKey = nodeEddsa.privateKey;
+    const privateKey = Buffer.from("358166546eb5ab98f5f9f9f7b094a536dc0dc5e197ee6dca7177cb747167077c","hex")
     const publicKey = eddsa.prv2pub(privateKey);
     return {
         private_key: privateKey.toString("hex"),

@@ -16,7 +16,10 @@ async function getTransactionById(index) {
 }
 
 async function getTransactionByAddress(address) {
-    var accountData = await AccountModel.findOne({ ethAddress: address }).exec();
+    var accountData = await AccountModel.findOne({ l1Address: address }).exec();
+    if (accountData == null) {
+        return [];
+    }
     var accountIndex = accountData.index;
     var transactionData = await TransactionModel.find({
         $or: [
@@ -29,9 +32,12 @@ async function getTransactionByAddress(address) {
 }
 
 async function getPendingTransactionByAddress(address) {
-    var accountData = await AccountModel.find({ ethAddress: address }).exec();
+    var accountData = await AccountModel.find({ l1Address: address }).exec();
+    if (accountData.length == 0) {
+        return [];
+    }
     var accountIndex = accountData[0].index;
-    var transactionData = await TransactionPendingModel.findOne({
+    var transactionData = await TransactionPendingModel.find({
         $or: [
             { 'fromIndex': accountIndex },
             { 'toIndex': accountIndex }
@@ -110,11 +116,49 @@ async function getTransactionDetail(data) {
     return transactionData;
 }
 
+async function postTestTransaction(data) {
+    var fromAddress = data.fromAddress;
+    var toAddress = data.toAddress;
+    var amount = data.amount;
+    var tokenType = data.tokenType;
+    var prv = data.prvkey;
+
+    fromAccount = await AccountModel.findOne({ l1Address: fromAddress }).exec();
+    toAccount = await AccountModel.findOne({ l1Address: toAddress }).exec();
+
+    if (fromAccount == null || toAccount == null) {
+        throw new Error("Invalid acount data");
+    }
+
+    var newTransaction = new Transaction(
+        fromAccount.pubkeyX,
+        fromAccount.pubkeyY,
+        fromAccount.index,
+        toAccount.pubkeyX,
+        toAccount.pubkeyY,
+        toAccount.index,
+        fromAccount.nonce,
+        data.amount,
+        data.tokenType
+    )
+
+    newTransaction.signTxHash(Buffer.from(prv, "hex"));
+    newTransaction.checkSignature();
+    const transactionData = new TransactionPendingModel(newTransaction);
+    transactionData.save();
+    return JSON.parse(JSON.stringify(newTransaction, (key, value) =>
+        typeof value === 'bigint'
+            ? value.toString()
+            : value // return everything else unchanged
+    ));
+}
+
 module.exports = {
     getTransactions,
     getTransactionById,
     getTransactionByAddress,
     getPendingTransactionByAddress,
     postTransaction,
-    getTransactionDetail
+    getTransactionDetail,
+    postTestTransaction
 }

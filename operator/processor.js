@@ -36,7 +36,7 @@ async function main() {
         console.log("Process Transaction")
         await processTx(rollup, signer);
         console.log("Process Transaction Successfully")
-        await sleep(120000);
+        await sleep(30000);
     }
 }
 

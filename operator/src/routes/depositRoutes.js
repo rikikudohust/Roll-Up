@@ -26,7 +26,7 @@ router.post('/pending/users', async function (req, res, next) {
     }
 })
 
-router.post('/pending/users/:address', async function (req, res, next) {
+router.get('/pending/users/:address', async function (req, res, next) {
     try {
         res.status(200).json(await getPendingDepositByAddress(req.params.address));
     } catch (err) {

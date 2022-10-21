@@ -12,7 +12,7 @@ router.get('/', async function(req, res, next) {
     }
 });
 
-router.get('/:address', async function(req, res, next) {
+router.get('/address/:address', async function(req, res, next) {
     try {
         res.status(200).json(await getAccountByAddress(req.params.address));
     } catch(err) {
@@ -21,7 +21,7 @@ router.get('/:address', async function(req, res, next) {
     }
 });
 
-router.get('/:id', async function(req, res, next) {
+router.get('/id/:id', async function(req, res, next) {
     try {
         res.status(200).json(await getAccountByIndex(req.params.id));
     } catch(err) {

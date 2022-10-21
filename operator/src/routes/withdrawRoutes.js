@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-const {withdrawToL1, getAllWithdrawProof} = require('../services/monitoring/withdrawService');
+const { withdrawToL1, getAllWithdrawProof , withdrawTest} = require('../services/monitoring/withdrawService');
 
 router.post('/', async function (req, res, next) {
     try {
@@ -12,10 +12,19 @@ router.post('/', async function (req, res, next) {
     }
 });
 
-router.get('/users/:address', async function(req, res, next) {
+router.post('/test', async function (req, res, next) {
+    try {
+        res.status(200).json(await withdrawTest(req.body));
+    } catch (err) {
+        console.error("Error withdraw/", err);
+        next(err);
+    }
+})
+
+router.get('/users/:address', async function (req, res, next) {
     try {
         res.status(200).json(await getAllWithdrawProof(req.params.address));
-    } catch(err) {
+    } catch (err) {
         console.error("Error GET /withdraw/users/:address");
         next(err);
     }

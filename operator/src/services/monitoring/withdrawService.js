@@ -8,6 +8,7 @@ const Tree = require('../../models/tree');
 
 const poseidon = require('../../utils/poseidon');
 const eddsa = require('../../utils/eddsa');
+const {stringifyBigInts, unstringifyBigInts} = require('../../utils/stringifybigint')
 
 const snarkjs = require('snarkjs');
 
@@ -118,6 +119,9 @@ async function getAllWithdrawProof(userAddress) {
     for (let i = 0; i < withdrawAccount.length; ++i) {
         var hashTmp = withdrawAccount[i].hashWithdraw;
         var withdrawTxTmp = await ForceTxModel.findOne({ hash: hashTmp });
+        if (withdrawTxTmp == null) {
+            continue;
+        }
         var transactionTree = await ForceTxModel.find({ block: withdrawTxTmp.block });
         console.log(transactionTree)
         var treeLeaves = [];
@@ -131,7 +135,7 @@ async function getAllWithdrawProof(userAddress) {
         var tmpTree = new Tree(treeLeaves);
         proofData = tmpTree.getProof(tmpIndex, tmpTree.depth);
         tmpData = {
-            txInfo: [withdrawTxTmp.fromX, withdrawTxTmp.fromY, withdrawTxTmp.fromIndex.toString(), "0", "0", withdrawTxTmp.nonce.toString(), withdrawTxTmp.amount.toString(),withdrawTxTmp.tokenType ,tmpTree.root.toString()],
+            txInfo: [withdrawTxTmp.fromX, withdrawTxTmp.fromY, withdrawTxTmp.fromIndex.toString(), "0", "0", withdrawTxTmp.nonce.toString(), withdrawTxTmp.amount.toString(), withdrawTxTmp.tokenType, tmpTree.root.toString()],
             position: proofData.proofPos,
             proof: proofData.proof.map(v => v.toString()),
             recipient: userAddress,
@@ -146,7 +150,92 @@ async function getAllWithdrawProof(userAddress) {
     return proof;
 }
 
+async function withdrawTest(data) {
+    var fromAddress = data.fromAddress;
+    var prvkey = data.prvkey;
+    var toAddress = "0";
+    var amount = data.amount;
+    var tokenType = data.tokenType;
+    var recipient = data.recipient;
+
+    var fromData = await AccountModel.findOne({ l1Address: fromAddress}).exec();
+    var toData = await AccountModel.findOne({ l1Address: toAddress}).exec();
+    if (fromData == null) {
+        throw new Error("Account not exist");
+    }
+
+    var newTransaction = new Transaction(
+        fromData.pubkeyX,
+        fromData.pubkeyY,
+        fromData.index,
+        toData.pubkeyX,
+        toData.pubkeyY,
+        toData.index,
+        fromData.nonce,
+        amount,
+        tokenType
+    )
+
+    newTransaction.signTxHash(Buffer.from(prvkey, "hex"));
+    newTransaction.checkSignature();
+
+    // Check l1 Signature
+    var hashWithdraw = poseidon([fromData.nonce.toString(), recipient.toString()])
+    const newSign = eddsa.signPoseidon(Buffer.from(prvkey, "hex"), unstringifyBigInts(hashWithdraw));
+
+    const withdrawInputCircuit = {
+        Ax: fromData.pubkeyX,
+        Ay: fromData.pubkeyY,
+        R8x: newSign.R8[0].toString(),
+        R8y: newSign.R8[1].toString(),
+        S: newSign.S.toString(),
+        M: hashWithdraw.toString()
+    }
+
+    const { proof, publicSignals } = await snarkjs.groth16.fullProve(withdrawInputCircuit, wasmWithdraw, zkeyWithdraw);
+    const updateA = [
+        proof.pi_a[0], proof.pi_a[1]
+    ]
+    const updateB = [
+        [proof.pi_b[0][1], proof.pi_b[0][0]],
+        [proof.pi_b[1][1], proof.pi_b[1][0]],
+    ]
+    const updateC = [
+        proof.pi_c[0], proof.pi_c[1]
+    ]
+
+    newWithdrawProof = {
+        hashWithdraw: newTransaction.hashTx(),
+        pubkeyX: fromData.pubkeyX,
+        pubkeyY: fromData.pubkeyY,
+        index: fromData.index,
+        nonce: fromData.nonce,
+        amount: amount,
+        recipient: recipient,
+        updateA: updateA,
+        updateB: updateB,
+        updateC: updateC
+    }
+
+    const withdrawProof = new WithdrawModel(newWithdrawProof);
+
+    const withdrawData = new TransactionModel(newTransaction);
+
+    await withdrawProof.save();
+    await withdrawData.save();
+
+    // return JSON.parse(JSON.stringify(newTransaction, (key, value) =>
+    //     typeof value === 'bigint'
+    //         ? value.toString()
+    //         : value // return everything else unchanged
+    // ));
+    return {
+        message: "success"
+    }
+}
+
 module.exports = {
     withdrawToL1,
-    getAllWithdrawProof
+    getAllWithdrawProof,
+    withdrawTest
 }

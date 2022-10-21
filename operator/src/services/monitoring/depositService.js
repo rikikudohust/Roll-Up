@@ -25,7 +25,8 @@ async function getPendingDeposit() {
 }
 
 async function getPendingDepositByAddress(address) {
-    var depositPendingData = await DepositModel.findOne({l1Address: address}).exec();
+    console.log(address)
+    var depositPendingData = await DepositModel.find({l1Address: address}).exec();
     return depositPendingData;
 }
 
