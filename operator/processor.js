@@ -9,7 +9,7 @@ const generateState = require('./src/services/process/generateState.js')
 require('dotenv').config();
 const provider = new ethers.providers.JsonRpcProvider(process.env.TESTNETBSC);
 
-const dbURL = 'mongodb://test:test@localhost:27027/rollup';
+const dbURL ="mongodb://test:test@127.0.0.1:27027/rollup";
 mongoose.connect(dbURL);
 const database = mongoose.connection;
 database.on('error', (error) => {

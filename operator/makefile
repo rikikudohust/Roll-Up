@@ -1,5 +1,5 @@
 mongodb:
-	docker-compose up -d
+	docker compose up -d
 
 monitoring:
 	npx nodemon app.js

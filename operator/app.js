@@ -1,7 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 
-const dbURL = 'mongodb://test:test@localhost:27027/rollup';
+const dbURL = 'mongodb://test:test@127.0.0.1:27027/rollup';
 const userRouter = require('./src/routes/userRoutes')
 const transactionRoutes = require('./src/routes/transactionRoutes');
 const walletRoutes = require('./src/routes/walletRoutes');
